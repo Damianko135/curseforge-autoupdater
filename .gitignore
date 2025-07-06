@@ -35,3 +35,6 @@ go.work.sum
 __pycache__/
 .pycache/
 venv 
+
+# Costum
+python/*.json

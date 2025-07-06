@@ -3,19 +3,24 @@
 
 # CurseForge AutoUpdate
 
-An automated tool for checking and downloading updates for CurseForge mods or modpacks using the CurseForge API. This script intelligently compares your current version with the latest available version and downloads updates when needed.
+An automated tool for checking and downloading updates for CurseForge mods or modpacks using the CurseForge API.
 
-## Features
+## Current Status
 
-- **Smart Version Detection**: Compares current vs. latest file versions using CurseForge file IDs
-- **Automatic Downloads**: Downloads new versions with progress indication
-- **Version Tracking**: Maintains local version state between runs
-- **Flexible Filtering**: Filter by Minecraft version and mod loader (Forge, Fabric, Quilt)
-- **Environment Configuration**: Uses `.env` files for easy configuration management
-- **API Key Support**: Optional API key support for higher rate limits
-- **Error Handling**: Comprehensive error handling and user feedback
+This repository contains a **Python proof-of-concept** (`python/poc.py`) that demonstrates basic CurseForge API integration. The goal is to eventually rewrite this functionality in **Golang** with full feature support.
 
-## Setup
+### Python PoC Features (Current Implementation)
+
+- **API Integration**: Connects to CurseForge Core API v1
+- **Mod Discovery**: Fetches mod information and validates mod IDs
+- **File Retrieval**: Gets list of all available files for a mod
+- **Latest File Detection**: Identifies the most recent file by date
+- **Download Functionality**: Downloads files with proper API authentication
+- **Environment Configuration**: Uses `.env` files for configuration
+- **Error Handling**: Comprehensive error handling and debugging output
+- **Multiple API Strategies**: Falls back to different API approaches if initial requests fail
+
+## Setup (Python PoC)
 
 1. **Clone and navigate to the project:**
    ```bash
@@ -23,87 +28,88 @@ An automated tool for checking and downloading updates for CurseForge mods or mo
    cd curseforge-autoupdate
    ```
 
-2. **Copy `.env.example` to `.env` and configure:**
+2. **Navigate to the Python PoC directory:**
    ```bash
-   cp .env.example .env
+   cd python
    ```
-   
-   Edit `.env` with your configuration:
-   - `CURSEFORGE_API_KEY` - Optional API key for higher rate limits
-   - `MOD_ID` - The CurseForge mod/modpack ID (required)
-   - `GAME_ID` - Game ID (432 for Minecraft, default)
-   - `DOWNLOAD_PATH` - Download directory (default: ./downloads)
-   - `EXTRACT_PATH` - Directory to extract manifest.json (default: ./extracted)
-   - `MINECRAFT_VERSION` - Filter by MC version (optional)
-   - `MOD_LOADER` - Filter by loader: forge, fabric, quilt (optional)
 
-3. **Install Python dependencies:**
+3. **Create a `.env` file:**
+   ```bash
+   # Create .env file with your configuration
+   CURSEFORGE_API_KEY=your_api_key_here
+   MOD_ID=1300837
+   DOWNLOAD_PATH=./downloads
+   ```
+
+4. **Install Python dependencies:**
    ```bash
    pip install -r requirements.txt
    ```
 
-4. **Run the script:**
+5. **Run the PoC script:**
    ```bash
    python poc.py
    ```
 
-## How It Works
+## How the Python PoC Works
 
-1. **Current Version Check**: Looks for existing `manifest.json` in the extracted directory or extracts it from downloaded ZIP files
-2. **API Query**: Fetches latest files from CurseForge API for the specified mod
-3. **Manifest Comparison**: Compares current manifest data (version, file date) with latest available file
-4. **Download**: If versions differ, downloads the new version with progress tracking
-5. **Manifest Extraction**: Automatically extracts and saves `manifest.json` from the downloaded ZIP file for future comparisons
+The Python PoC follows these steps:
 
-### Manifest-Based Version Detection
+1. **Configuration Loading**: Reads API key, mod ID, and download path from `.env` file
+2. **Mod Validation**: Queries the CurseForge API to verify the mod exists and get basic information
+3. **File Discovery**: Fetches all available files for the specified mod
+4. **Latest File Selection**: Identifies the most recent file based on upload date
+5. **File Download**: Downloads the latest file to the specified directory with progress feedback
 
-The script now uses the modpack's own `manifest.json` file for version tracking, which provides:
+### Current Implementation Details
 
-- **Modpack version** - The actual version number from the modpack creator
-- **File metadata** - Creation date, file ID, and other CurseForge data
-- **Mod list** - Complete list of mods with their project and file IDs
-- **Minecraft version** - Target Minecraft version for the modpack
-- **Mod loader info** - Forge, Fabric, or Quilt version information
+**API Integration:**
+- Uses CurseForge Core API v1 endpoints
+- Requires valid API key for authentication
+- Implements multiple fallback strategies if initial requests fail
+- Provides detailed debugging output for troubleshooting
 
-This approach is more reliable than external tracking files and uses the modpack's native metadata.
+**File Handling:**
+- Downloads files using streaming for memory efficiency
+- Preserves original filenames from CurseForge
+- Creates download directories automatically
+
+**Error Handling:**
+- Validates API responses and provides helpful error messages
+- Includes troubleshooting suggestions for common issues
+- Gracefully handles network errors and API limitations
 
 ## File Structure
 
-After running the script, you'll have:
+After running the Python PoC, you'll have:
 ```
 curseforge-autoupdate/
-├── .env                    # Your configuration (create from .env.example)
-├── .env.example           # Configuration template
-├── poc.py                 # Main script
-├── requirements.txt       # Python dependencies
-├── extracted/             # Extracted manifest files (auto-generated)
-│   └── manifest.json     # Current modpack manifest
-└── downloads/            # Downloaded files (auto-generated)
-    └── [modpack-files.zip]
+├── python/                 # Python PoC directory
+│   ├── .env               # Your configuration
+│   ├── poc.py             # Main PoC script
+│   ├── requirements.txt   # Python dependencies
+│   ├── README.md          # Python-specific documentation
+│   └── downloads/         # Downloaded files (auto-generated)
+│       └── [mod-files]    # Downloaded mod/modpack files
+├── .gitignore
+├── LICENSE
+└── README.md              # This file
 ```
-
-The script now uses the modpack's native `manifest.json` file (extracted from ZIP files) for version tracking, eliminating the need for separate tracking files.
 
 ## Configuration Examples
 
-### Basic Modpack Setup
+### Basic Mod Download
 ```env
+CURSEFORGE_API_KEY=your_api_key_here
 MOD_ID=123456
-DOWNLOAD_PATH=./modpacks
+DOWNLOAD_PATH=./downloads
 ```
 
-### Minecraft 1.20.1 with Forge
+### Custom Download Location
 ```env
+CURSEFORGE_API_KEY=your_api_key_here
 MOD_ID=123456
-MINECRAFT_VERSION=1.20.1
-MOD_LOADER=forge
-DOWNLOAD_PATH=./server-files
-```
-
-### With API Key (Recommended)
-```env
-CURSEFORGE_API_KEY=your-api-key-here
-MOD_ID=123456
+DOWNLOAD_PATH=C:/Server/mods
 ```
 
 ## Finding Mod IDs
@@ -116,45 +122,85 @@ To find a CurseForge mod ID:
 
 ## API Key Setup
 
-While not required, an API key provides higher rate limits:
-1. Visit [CurseForge Core API](https://docs.curseforge.com/)
-2. Register for an API key
-3. Add it to your `.env` file as `CURSEFORGE_API_KEY`
+An API key is **required** for the Python PoC:
+1. Visit [CurseForge Core API Console](https://console.curseforge.com/)
+2. Sign up or log in with your CurseForge account
+3. Create a new API key
+4. Add it to your `.env` file as `CURSEFORGE_API_KEY=your_key_here`
+
+## Python PoC Limitations
+
+The current Python implementation is a proof-of-concept with the following limitations:
+
+- **No Version Tracking**: Downloads the latest file each time, doesn't check if it's already downloaded
+- **No Filtering**: Cannot filter by Minecraft version, mod loader, or file type
+- **No Manifest Extraction**: Downloads files as-is without extracting metadata
+- **Single Mod Support**: Only handles one mod at a time
+- **Basic Error Handling**: Limited recovery options for failed downloads
 
 ## Troubleshooting
 
-- **No files found**: Check if `MOD_ID` is correct and the mod has files for your specified filters
-- **Download fails**: Verify internet connection and that the file isn't restricted
-- **Import errors**: Ensure all dependencies are installed with `pip install -r requirements.txt`
-- **Permission errors**: Check write permissions for download directory
+### Common Issues
+
+**"No API key found"**
+- Ensure you have a `.env` file in the `python/` directory
+- Verify the API key is correctly formatted: `CURSEFORGE_API_KEY=your_key_here`
+
+**"No files found"**
+- Check if the `MOD_ID` is correct (find it in the mod's CurseForge URL)
+- Verify the mod has public files available
+- Some mods may have restricted downloads
+
+**"Request failed" or API errors**
+- Verify your API key is valid and active
+- Check your internet connection
+- CurseForge API may have rate limits or temporary issues
+
+**Download failures**
+- Ensure the download directory exists and is writable
+- Check available disk space
+- Some files may have download restrictions
 
 ## Use Cases
 
+**Current (Python PoC):**
+- Testing CurseForge API integration
+- Manual mod/modpack downloads
+- API key validation and troubleshooting
+- Learning the CurseForge API structure
+
+**Planned (Golang Implementation):**
 - **Server Administrators**: Automate modpack updates for Minecraft servers
 - **Development**: Keep development environments up-to-date during modpack creation
 - **CI/CD Integration**: Integrate into deployment pipelines for automated server updates
 
-## Future Enhancements
+## Planned Features (Golang Implementation)
 
-- **Selective Mod Updates**: Compare individual mod versions from manifest files to detect specific mod updates
-- **Rollback Capability**: Keep previous manifests for easy rollback to earlier versions
-- **Integration Hooks**: Add pre/post-download scripts for custom deployment logic
+The planned Golang rewrite will include:
+
+- **Smart Version Detection**: Compare current vs. latest file versions using CurseForge file IDs
+- **Manifest-Based Tracking**: Use modpack `manifest.json` files for reliable version tracking
+- **Automatic Extraction**: Extract and analyze ZIP contents including manifest files
+- **Filtering Support**: Filter by Minecraft version, mod loader (Forge, Fabric, Quilt)
+- **Selective Updates**: Compare individual mod versions to detect specific mod updates
+- **Rollback Capability**: Keep previous versions for easy rollback
 - **Multi-modpack Support**: Monitor and update multiple modpacks simultaneously
-- **Automatic Extraction**: Optionally extract the entire modpack, not just the manifest
+- **Integration Hooks**: Pre/post-download scripts for custom deployment logic
+- **Configuration Management**: Enhanced configuration with validation and templates
 
-## Notes
+## Development Notes
 
-* This PoC is written in Python. The goal is to rework it in **Golang** later.
-* Currently focused on Minecraft, but could be expanded to other games supported by CurseForge.
-* Designed to reduce manual server update steps during modpack development.
-* The script only downloads; installation/deployment logic can be added as needed.
+* **Current Status**: This repository contains a Python proof-of-concept demonstrating basic CurseForge API integration
+* **Target Implementation**: The goal is to rewrite this functionality in **Golang** with comprehensive features
+* **Focus**: Currently focused on Minecraft, but could be expanded to other games supported by CurseForge
+* **Purpose**: Designed to reduce manual server update steps during modpack development
+* **Scope**: The Python PoC only downloads files; installation/deployment logic will be added in the Golang version
 
-## Dependencies
+## Dependencies (Python PoC)
 
-- `requests` - HTTP library for API calls
-- `python-dotenv` - Environment variable management
-- `pathlib` - Modern path handling (built-in)
-- `json` - JSON parsing (built-in)
+- `requests>=2.28.0` - HTTP library for CurseForge API calls
+- `python-dotenv>=1.0.0` - Environment variable management from `.env` files
+- Built-in libraries: `pathlib`, `json`, `zipfile`, `os`
 
 
 <!-- vim: set ft=markdown : -->
