@@ -7,6 +7,10 @@
 *.dll
 *.so
 *.dylib
+# Build binaries directories
+bin/
+dist/
+    
 
 # Test binary, built with `go test -c`
 *.test
@@ -39,4 +43,5 @@ venv
 # Costum
 python/*.json
 
-golang/*
+# temp files
+t*mp/
