@@ -9,6 +9,7 @@ import json
 import zipfile
 from pathlib import Path
 from dotenv import load_dotenv
+from datetime import datetime
 
 # Load environment variables
 load_dotenv()
@@ -48,6 +49,9 @@ def get_mod_files(api_key, mod_id):
         else:
             print("Full API response (truncated):")
             print(json.dumps(data, indent=2)[:500] + "...")
+            print("Writing to 'full_response.json'")
+            with open('full_response.json', 'w') as f:
+                json.dump(data, f, indent=2) 
         
         if files:
             print("Sample file info:")
@@ -137,6 +141,81 @@ def get_mod_files_raw(api_key, mod_id):
         print(f"Raw request error: {e}")
         return []
 
+def load_download_metadata(download_path):
+    """Load metadata about previously downloaded files."""
+    metadata_file = download_path / "download_metadata.json"
+    if metadata_file.exists():
+        with open(metadata_file, 'r') as f:
+            return json.load(f)
+    return {}
+
+def save_download_metadata(download_path, metadata):
+    """Save metadata about downloaded files."""
+    metadata_file = download_path / "download_metadata.json"
+    with open(metadata_file, 'w') as f:
+        json.dump(metadata, f, indent=2)
+
+def is_download_needed(file_info, download_path, metadata):
+    """Check if a file needs to be downloaded."""
+    file_name = file_info.get("fileName")
+    file_id = file_info.get("id")
+    file_date = file_info.get("fileDate")
+    
+    # Check if file exists locally
+    local_file_path = download_path / file_name
+    if not local_file_path.exists():
+        print(f"  ➤ File not found locally: {file_name}")
+        return True, "File not downloaded yet"
+    
+    # Check metadata
+    if str(file_id) not in metadata:
+        print(f"  ➤ No metadata found for file ID {file_id}")
+        return True, "No metadata for this file"
+    
+    local_metadata = metadata[str(file_id)]
+    local_date = local_metadata.get("fileDate")
+    
+    if local_date != file_date:
+        print(f"  ➤ Date mismatch - Local: {local_date}, Remote: {file_date}")
+        return True, f"File updated (was: {local_date}, now: {file_date})"
+    
+    # Check file hash if available
+    remote_hash = None
+    for hash_info in file_info.get("hashes", []):
+        if hash_info.get("algo") == 1:  # SHA-1
+            remote_hash = hash_info.get("value")
+            break
+    
+    if remote_hash and local_metadata.get("hash") != remote_hash:
+        print(f"  ➤ Hash mismatch - Local: {local_metadata.get('hash')}, Remote: {remote_hash}")
+        return True, "File hash changed"
+    
+    print(f"  ✓ File up to date: {file_name}")
+    return False, "File is current"
+
+def record_download(file_info, download_path, metadata):
+    """Record a successful download in metadata."""
+    file_id = str(file_info.get("id"))
+    file_name = file_info.get("fileName")
+    
+    # Get hash
+    file_hash = None
+    for hash_info in file_info.get("hashes", []):
+        if hash_info.get("algo") == 1:  # SHA-1
+            file_hash = hash_info.get("value")
+            break
+    
+    metadata[file_id] = {
+        "fileName": file_name,
+        "fileDate": file_info.get("fileDate"),
+        "downloadedAt": datetime.now().isoformat(),
+        "hash": file_hash,
+        "fileLength": file_info.get("fileLength")
+    }
+    
+    save_download_metadata(download_path, metadata)
+    print(f"  ✓ Recorded download metadata for {file_name}")
+
 def main():
     """Main function for the CurseForge updater PoC."""
     print("CurseForge Auto-Updater PoC")
@@ -161,7 +240,7 @@ def main():
     print("Step 1: Testing mod info endpoint...")
     try:
         mod_info_url = f"https://api.curseforge.com/v1/mods/{mod_id}"
-        headers = {"Accept": "application/json", "x-api-key": api_key}
+        headers = {"Accept": "application/json", "x-api-key": api_key, "User-Agent": "CurseForge Auto-Updater PoC/1.0"}
         
         response = requests.get(mod_info_url, headers=headers)
         print(f"Mod info response: {response.status_code}")
@@ -228,13 +307,27 @@ def main():
         print(f"  Size: {latest_file.get('fileLength', 0)} bytes")
         print(f"  Download URL: {'Available' if latest_file.get('downloadUrl') else 'Not available'}")
         
-        # Download the file
+        # Check if download is needed
         print()
-        print("Step 4: Downloading...")
-        if download_file(latest_file, api_key, download_path):
-            print("✓ PoC completed successfully!")
+        print("Step 4: Checking if download is needed...")
+        metadata = load_download_metadata(download_path)
+        print(f"Found metadata for {len(metadata)} previously downloaded files")
+        
+        needs_download, reason = is_download_needed(latest_file, download_path, metadata)
+        
+        if needs_download:
+            print(f"📥 Download needed: {reason}")
+            print()
+            print("Step 5: Downloading...")
+            if download_file(latest_file, api_key, download_path):
+                print("✓ Download completed!")
+                record_download(latest_file, download_path, metadata)
+                print("✓ PoC completed successfully!")
+            else:
+                print("❌ Download failed")
         else:
-            print("❌ Download failed")
+            print(f"✅ No download needed: {reason}")
+            print("✓ PoC completed - everything up to date!")
         
     except Exception as e:
         print(f"❌ Error: {e}")

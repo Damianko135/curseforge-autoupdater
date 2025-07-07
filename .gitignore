@@ -38,3 +38,5 @@ venv
 
 # Costum
 python/*.json
+
+golang/*
