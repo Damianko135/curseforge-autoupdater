@@ -1,4 +1,4 @@
-module github.com/damianko135/curseforge-autoupdate
+module github.com/damianko135/curseforge-autoupdate/golang
 
 go 1.21
 

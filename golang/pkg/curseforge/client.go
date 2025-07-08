@@ -10,7 +10,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/damianko135/curseforge-autoupdate/pkg/models"
+	"github.com/damianko135/curseforge-autoupdate/golang/pkg/models"
 	"github.com/go-resty/resty/v2"
 	"github.com/sirupsen/logrus"
 )

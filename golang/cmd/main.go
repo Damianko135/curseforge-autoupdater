@@ -3,9 +3,9 @@ package main
 import (
 	"fmt"
 
-	"github.com/damianko135/curseforge-autoupdate/internal/config"
-	"github.com/damianko135/curseforge-autoupdate/pkg/curseforge"
-	"github.com/damianko135/curseforge-autoupdate/pkg/models"
+	"github.com/damianko135/curseforge-autoupdate/golang/internal/config"
+	"github.com/damianko135/curseforge-autoupdate/golang/pkg/curseforge"
+	"github.com/damianko135/curseforge-autoupdate/golang/pkg/models"
 	"github.com/muesli/coral"
 	"github.com/sirupsen/logrus"
 )

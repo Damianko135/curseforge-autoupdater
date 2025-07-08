@@ -1,5 +1,6 @@
 //go:build mage
 
+// vscode:ignoreFileError
 package main
 
 import (

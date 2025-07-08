@@ -5,7 +5,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/damianko135/curseforge-autoupdate/pkg/models"
+	"github.com/damianko135/curseforge-autoupdate/golang/pkg/models"
 	"github.com/joho/godotenv"
 	"github.com/knadh/koanf/parsers/yaml"
 	"github.com/knadh/koanf/providers/env"
