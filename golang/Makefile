@@ -33,10 +33,6 @@ clean:
 install:
 	go install ./cmd
 
-# Development: run with live reload (requires air)
-dev:
-	air
-
 # Format code
 fmt:
 	go fmt ./...

@@ -53,19 +53,7 @@ mage -version
 
 ## Optional Development Dependencies
 
-### 3. Air (Live Reload - Optional)
-Only needed if you want to use `mage dev` for live reload during development.
-
-```bash
-go install github.com/air-verse/air@latest
-```
-
-Verify installation:
-```bash
-air -v
-```
-
-### 4. golangci-lint (Code Linting - Optional)
+### 3. golangci-lint (Code Linting - Optional)
 Only needed if you want to use `mage lint` for code quality checks.
 
 **Windows:**
@@ -155,7 +143,6 @@ mage deps build
 ```bash
 # After Go is installed
 go install github.com/magefile/mage@latest
-go install github.com/air-verse/air@latest
 go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
 go install github.com/securecodewarrior/gosec/v2/cmd/gosec@latest
 
@@ -176,7 +163,6 @@ After setup, you can use these commands:
 - `mage clean` - Clean build artifacts
 
 **Development Commands:**
-- `mage dev` - Live reload development (requires air)
 - `mage fmt` - Format code
 - `mage test` - Run tests
 - `mage lint` - Run linter (requires golangci-lint)
@@ -195,7 +181,3 @@ After setup, you can use these commands:
 **If mage commands fail:**
 - Ensure you're in the `golang/` directory
 - Run `mage deps` first to install project dependencies
-
-**If air fails to start:**
-- Make sure you have write permissions in the project directory
-- Check that `tmp/` directory can be created
