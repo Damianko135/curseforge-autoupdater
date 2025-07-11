@@ -10,6 +10,7 @@ import zipfile
 from pathlib import Path
 from dotenv import load_dotenv
 from datetime import datetime
+import traceback
 
 # Load environment variables
 load_dotenv()
@@ -17,7 +18,11 @@ load_dotenv()
 def get_mod_files(api_key, mod_id):
     """Get mod files from CurseForge API."""
     url = f"https://api.curseforge.com/v1/mods/{mod_id}/files"
-    headers = {"Accept": "application/json", "x-api-key": api_key}
+    headers = {
+        "Accept": "application/json",
+        "x-api-key": api_key,
+        "User-Agent": "CurseForge Auto-Updater PoC/1.0"
+    }
     
     print(f"Making API request to: {url}")
     print(f"Headers: {dict(headers)}")
@@ -68,7 +73,9 @@ def get_mod_files(api_key, mod_id):
 
 def get_latest_file(files):
     """Get the latest file from the list."""
-    return max(files, key=lambda x: x.get("fileDate", ""), default=None)
+    if not files:
+        return None
+    return max(files, key=lambda x: x.get("fileDate", ""))
 
 def download_file(file_info, api_key, download_path):
     """Download the file."""
@@ -82,9 +89,11 @@ def download_file(file_info, api_key, download_path):
     download_path.mkdir(parents=True, exist_ok=True)
     file_path = download_path / file_name
     
-    print(f"Downloading {file_name}...")
-    headers = {"x-api-key": api_key}
-    response = requests.get(download_url, headers=headers, stream=True)
+    headers = {
+        "x-api-key": api_key,
+        "User-Agent": "CurseForge Auto-Updater PoC/1.0"
+    }
+    response = requests.get(download_url, headers=headers, stream=True, timeout=60)
     response.raise_for_status()
     
     with open(file_path, 'wb') as f:
@@ -115,7 +124,7 @@ def get_mod_files_with_params(api_key, mod_id, params):
             print(f"Request failed: {response.text}")
             return []
             
-    except Exception as e:
+    except requests.exceptions.RequestException as e:
         print(f"Error with params: {e}")
         return []
 
@@ -227,7 +236,10 @@ def main():
     download_path = Path(os.getenv('DOWNLOAD_PATH', './downloads'))
     
     print(f"Configuration:")
-    print(f"  API key: {'*' * (len(api_key) - 4)}{api_key[-4:] if api_key else 'None'}")
+    if api_key:
+        print(f"  API key: {'*' * (len(api_key) - 4)}{api_key[-4:]}")
+    else:
+        print(f"  API key: None")
     print(f"  Mod ID: {mod_id}")
     print(f"  Download path: {download_path}")
     print()
@@ -323,15 +335,11 @@ def main():
                 print("✓ Download completed!")
                 record_download(latest_file, download_path, metadata)
                 print("✓ PoC completed successfully!")
-            else:
-                print("❌ Download failed")
         else:
-            print(f"✅ No download needed: {reason}")
             print("✓ PoC completed - everything up to date!")
         
     except Exception as e:
         print(f"❌ Error: {e}")
-        import traceback
         traceback.print_exc()
 
 if __name__ == "__main__":
