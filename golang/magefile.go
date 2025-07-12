@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	binaryName = "curseforge-updater"
+	binaryName = "cf-updater"
 	distDir    = "dist"
 	cmdDir     = "./cmd"
 )
@@ -44,9 +44,9 @@ func Build() error {
 	return sh.RunV("go", "build", "-trimpath", "-o", binary, cmdDir)
 }
 
-// BuildAll builds the application for all target platforms.
-func BuildAll() error {
-	fmt.Println("Building for all platforms...")
+// Release builds the application for all target platforms (for release).
+func Release() error {
+	fmt.Println("Building release for all platforms...")
 
 	if err := os.MkdirAll(distDir, 0755); err != nil {
 		return err
@@ -67,16 +67,37 @@ func BuildAll() error {
 		}
 	}
 
-	fmt.Println("All builds completed successfully!")
+	fmt.Println("All release builds completed successfully!")
 	return nil
 }
 
-// Deps downloads and tidies Go module dependencies.
+// Deps downloads Go module dependencies.
 func Deps() error {
 	if err := sh.RunV("go", "mod", "download"); err != nil {
 		return err
 	}
 	return sh.RunV("go", "mod", "tidy")
+}
+
+// Tidy runs `go mod tidy` explicitly.
+func Tidy() error {
+	return sh.RunV("go", "mod", "tidy")
+}
+
+// Fmt formats the codebase using `go fmt`.
+func Fmt() error {
+	return sh.RunV("go", "fmt", "./...")
+}
+
+// GoImports formats the codebase using `goimports`.
+func GoImports() error {
+	return sh.RunV("goimports", "-w", ".")
+}
+
+// Format runs all formatting tools (go fmt + goimports).
+func Format() error {
+	mg.Deps(Fmt, GoImports)
+	return nil
 }
 
 // Test runs unit tests.
@@ -117,11 +138,6 @@ func InstallApp() error {
 	return sh.RunV("go", "install", cmdDir)
 }
 
-// Fmt formats the codebase.
-func Fmt() error {
-	return sh.RunV("go", "fmt", "./...")
-}
-
 // Lint runs the linter (requires golangci-lint).
 func Lint() error {
 	return sh.RunV("golangci-lint", "run")
@@ -139,6 +155,10 @@ func Install() error {
 	}{
 		{"golangci-lint", "github.com/golangci/golangci-lint/cmd/golangci-lint", "latest"},
 		{"gosec", "github.com/securego/gosec/v2/cmd/gosec", "latest"},
+		{"go-toml", "github.com/pelletier/go-toml/v2/cmd/tomlv", "latest"},
+		{"mage", "github.com/magefile/mage", "v1.14.0"},
+		{"gofumpt", "mvdan.cc/gofumpt", "v0.4.0"},
+		{"goimports", "golang.org/x/tools/cmd/goimports", "latest"},
 	}
 
 	for _, t := range tools {
@@ -157,12 +177,12 @@ func Setup() {
 	mg.SerialDeps(Deps, Install)
 }
 
-// All runs the full build pipeline: Deps, Fmt, Test, Build.
+// All runs the full build pipeline: Deps, Format, Test, Build.
 func All() {
-	mg.SerialDeps(Deps, Fmt, Test, Build)
+	mg.SerialDeps(Deps, Format, Test, Build)
 }
 
-// CI runs the CI pipeline: Deps, Fmt, Lint, Test, BuildAll.
+// CI runs the CI pipeline: Deps, Format, Lint, Test, Release.
 func CI() {
-	mg.SerialDeps(Deps, Fmt, Lint, Test, BuildAll)
+	mg.SerialDeps(Deps, Format, Lint, Test, Release)
 }

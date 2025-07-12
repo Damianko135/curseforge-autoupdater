@@ -1,6 +1,0 @@
-# Example configuration file for CurseForge Auto-Updater
-api_key: "your-api-key-here"
-mod_id: "123456"
-download_path: "./downloads"
-game_id: 432
-log_level: "info"
