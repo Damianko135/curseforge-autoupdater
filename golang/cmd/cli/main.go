@@ -105,9 +105,9 @@ func newRootCmd(cfg *Config, configPath *string, initFormat *string) *cobra.Comm
 			if os.IsNotExist(err) {
 				fmt.Printf("Config file '%s' not found. Would you like to create one? [Y/n]: ", *configPath)
 				var resp string
-			   if _, err := fmt.Scanln(&resp); err != nil && err.Error() != "unexpected newline" {
-					   return fmt.Errorf("failed to read input: %w", err)
-			   }
+				if _, err := fmt.Scanln(&resp); err != nil && err.Error() != "unexpected newline" {
+					return fmt.Errorf("failed to read input: %w", err)
+				}
 				if resp == "" || resp == "y" || resp == "Y" {
 					if err := env.WriteTOMLTemplate(*configPath); err != nil {
 						return fmt.Errorf("failed to create config: %w", err)
@@ -121,21 +121,20 @@ func newRootCmd(cfg *Config, configPath *string, initFormat *string) *cobra.Comm
 			return fmt.Errorf("failed to load config: %w", err)
 		}
 
-
-			   if err := viper.Unmarshal(cfg); err != nil {
-					   return fmt.Errorf("failed to unmarshal config: %w", err)
-			   }
+		if err := viper.Unmarshal(cfg); err != nil {
+			return fmt.Errorf("failed to unmarshal config: %w", err)
+		}
 
 		// Fallback to env vars if missing
-			   if cfg.APIKey == "" {
-					   cfg.APIKey = getConfigValue("API_KEY", "")
-			   }
-			   if cfg.ModID == 0 {
-					   modIDStr := getConfigValue("MOD_ID", "0")
-					   if _, err := fmt.Sscanf(modIDStr, "%d", &cfg.ModID); err != nil {
-							   return fmt.Errorf("failed to parse MOD_ID: %w", err)
-					   }
-			   }
+		if cfg.APIKey == "" {
+			cfg.APIKey = getConfigValue("API_KEY", "")
+		}
+		if cfg.ModID == 0 {
+			modIDStr := getConfigValue("MOD_ID", "0")
+			if _, err := fmt.Sscanf(modIDStr, "%d", &cfg.ModID); err != nil {
+				return fmt.Errorf("failed to parse MOD_ID: %w", err)
+			}
+		}
 
 		return nil
 	}
@@ -202,18 +201,18 @@ func newHelpCmd(root *cobra.Command) *cobra.Command {
 		Use:   "help",
 		Short: "Show help for any command",
 		Run: func(cmd *cobra.Command, args []string) {
-			   if len(args) > 0 {
-					   c, _, err := root.Find(args)
-					   if err == nil && c != nil {
-							   if err := c.Help(); err != nil {
-									   fmt.Fprintf(os.Stderr, "Help error: %v\n", err)
-							   }
-							   return
-					   }
-			   }
-			   if err := root.Help(); err != nil {
-					   fmt.Fprintf(os.Stderr, "Help error: %v\n", err)
-			   }
+			if len(args) > 0 {
+				c, _, err := root.Find(args)
+				if err == nil && c != nil {
+					if err := c.Help(); err != nil {
+						fmt.Fprintf(os.Stderr, "Help error: %v\n", err)
+					}
+					return
+				}
+			}
+			if err := root.Help(); err != nil {
+				fmt.Fprintf(os.Stderr, "Help error: %v\n", err)
+			}
 		},
 	}
 }
