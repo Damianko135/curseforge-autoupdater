@@ -5,7 +5,6 @@ go 1.23.0
 toolchain go1.24.4
 
 require (
-	github.com/joho/godotenv v1.5.1
 	github.com/klauspost/compress v1.18.0
 	github.com/magefile/mage v1.15.0
 	github.com/pelletier/go-toml/v2 v2.2.4
