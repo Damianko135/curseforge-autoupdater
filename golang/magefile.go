@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sync"
 
 	"github.com/magefile/mage/mg"
 	"github.com/magefile/mage/sh"
@@ -53,22 +54,38 @@ func Release() error {
 		return err
 	}
 
+	var wg sync.WaitGroup
+	var mu sync.Mutex
+	var errs []error
+
 	for _, p := range platforms {
-		binary := fmt.Sprintf("%s-%s-%s%s", binaryName, p.goos, p.goarch, p.ext)
-		binaryPath := filepath.Join(distDir, binary)
+		wg.Add(1)
+		go func(p struct{ goos, goarch, ext string }) {
+			defer wg.Done()
+			binary := fmt.Sprintf("%s-%s-%s%s", binaryName, p.goos, p.goarch, p.ext)
+			binaryPath := filepath.Join(distDir, binary)
 
-		fmt.Printf("Building %s...\n", binary)
-		env := map[string]string{
-			"GOOS":   p.goos,
-			"GOARCH": p.goarch,
-		}
+			fmt.Printf("Building %s...\n", binary)
+			env := map[string]string{
+				"GOOS":   p.goos,
+				"GOARCH": p.goarch,
+			}
 
-		if err := sh.RunWith(env, "go", "build", "-trimpath", "-o", binaryPath, cliDir); err != nil {
-			return fmt.Errorf("failed to build %s: %w", binary, err)
-		}
+			if err := sh.RunWith(env, "go", "build", "-trimpath", "-o", binaryPath, cliDir); err != nil {
+				mu.Lock()
+				errs = append(errs, fmt.Errorf("failed to build %s: %w", binary, err))
+				mu.Unlock()
+			}
+		}(p)
 	}
 
-	fmt.Println("All release builds completed successfully!")
+	wg.Wait()
+
+	if len(errs) > 0 {
+		return errors.Join(errs...)
+	}
+
+	fmt.Println("All builds completed successfully!")
 	return nil
 }
 
