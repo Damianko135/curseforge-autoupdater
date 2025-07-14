@@ -16,7 +16,7 @@ import (
 const (
 	binaryName = "cf-updater"
 	distDir    = "dist"
-	cmdDir     = "./cmd"
+	cliDir     = "./cmd/cli"
 )
 
 var platforms = []struct {
@@ -41,7 +41,7 @@ func Build() error {
 		binary += ".exe"
 	}
 
-	return sh.RunV("go", "build", "-trimpath", "-o", binary, cmdDir)
+	return sh.RunV("go", "build", "-trimpath", "-o", binary, cliDir)
 }
 
 // Release builds the application for all target platforms (for release).
@@ -62,7 +62,7 @@ func Release() error {
 			"GOARCH": p.goarch,
 		}
 
-		if err := sh.RunWith(env, "go", "build", "-trimpath", "-o", binaryPath, cmdDir); err != nil {
+		if err := sh.RunWith(env, "go", "build", "-trimpath", "-o", binaryPath, cliDir); err != nil {
 			return fmt.Errorf("failed to build %s: %w", binary, err)
 		}
 	}
@@ -107,7 +107,7 @@ func Test() error {
 
 // Run executes the application locally.
 func Run() error {
-	return sh.RunV("go", "run", cmdDir)
+	return sh.RunV("go", "run", cliDir)
 }
 
 // Clean removes build artifacts.
@@ -135,7 +135,7 @@ func Clean() error {
 
 // InstallApp installs the application into GOPATH/bin.
 func InstallApp() error {
-	return sh.RunV("go", "install", cmdDir)
+	return sh.RunV("go", "install", cliDir)
 }
 
 // Lint runs the linter (requires golangci-lint).
@@ -179,10 +179,10 @@ func Setup() {
 
 // All runs the full build pipeline: Deps, Format, Test, Build.
 func All() {
-	mg.SerialDeps(Deps, Format, Test, Build)
+	mg.SerialDeps(Clean, Deps, Format, Test, Build)
 }
 
 // CI runs the CI pipeline: Deps, Format, Lint, Test, Release.
 func CI() {
-	mg.SerialDeps(Deps, Format, Lint, Test, Release)
+	mg.SerialDeps(Clean, Deps, Format, Lint, Test, Release)
 }
