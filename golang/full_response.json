@@ -1,0 +1,73 @@
+{
+  "data": [
+    {
+      "id": 6734040,
+      "gameId": 432,
+      "modId": 1300837,
+      "isAvailable": true,
+      "displayName": "TandemCreate-0.0.1-Alpha.zip",
+      "fileName": "TandemCreate-0.0.1-Alpha.zip",
+      "releaseType": 3,
+      "fileStatus": 4,
+      "hashes": [
+        {
+          "value": "a208a0c888a0fac39df0ebd2f15f6c7205b05b3d",
+          "algo": 1
+        },
+        {
+          "value": "1132d1a7af51770e5e38976ffcefc258",
+          "algo": 2
+        }
+      ],
+      "fileDate": "2025-07-05T17:53:01.533Z",
+      "fileLength": 88930,
+      "downloadCount": 6,
+      "fileSizeOnDisk": 255691,
+      "downloadUrl": "https://edge.forgecdn.net/files/6734/40/TandemCreate-0.0.1-Alpha.zip",
+      "gameVersions": [
+        "NeoForge",
+        "1.21.1"
+      ],
+      "sortableGameVersions": [
+        {
+          "gameVersionName": "NeoForge",
+          "gameVersionPadded": "0",
+          "gameVersion": "",
+          "gameVersionReleaseDate": "2023-07-25T00:00:00Z",
+          "gameVersionTypeId": 68441
+        },
+        {
+          "gameVersionName": "1.21.1",
+          "gameVersionPadded": "0000000001.0000000021.0000000001",
+          "gameVersion": "1.21.1",
+          "gameVersionReleaseDate": "2024-08-08T15:17:53.787Z",
+          "gameVersionTypeId": 77784
+        }
+      ],
+      "dependencies": [],
+      "alternateFileId": 0,
+      "isServerPack": false,
+      "fileFingerprint": 2925575412,
+      "modules": [
+        {
+          "name": "manifest.json",
+          "fingerprint": 2411959149
+        },
+        {
+          "name": "modlist.html",
+          "fingerprint": 4058604993
+        },
+        {
+          "name": "overrides",
+          "fingerprint": 3579626442
+        }
+      ]
+    }
+  ],
+  "pagination": {
+    "index": 0,
+    "pageSize": 50,
+    "resultCount": 1,
+    "totalCount": 1
+  }
+}
