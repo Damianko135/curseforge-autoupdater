@@ -17,6 +17,7 @@ const (
 	binaryName = "cf-updater"
 	distDir    = "dist"
 	cliDir     = "./cmd/cli"
+	webDir     = "./cmd/web"
 )
 
 var platforms = []struct {
