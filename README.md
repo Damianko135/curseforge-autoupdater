@@ -3,51 +3,122 @@
 
 # CurseForge AutoUpdate
 
-An automated tool for checking and downloading updates for CurseForge mods or modpacks using the CurseForge API.
+An automated tool for checking, downloading, and managing updates for CurseForge mods or modpacks. Supports both a Python proof-of-concept and a modern Golang CLI for advanced server automation.
 
-## Current Status
+---
 
-This repository contains a **Python proof-of-concept** (`python/poc.py`) that demonstrates basic CurseForge API integration. The goal is to eventually rewrite this functionality in **Golang** with full feature support.
+## Project Overview
 
-### Python PoC Features (Current Implementation)
+This repository contains:
 
-- **API Integration**: Connects to CurseForge Core API v1
-- **Mod Discovery**: Fetches mod information and validates mod IDs
-- **File Retrieval**: Gets list of all available files for a mod
-- **Latest File Detection**: Identifies the most recent file by date
-- **Download Functionality**: Downloads files with proper API authentication
-- **Environment Configuration**: Uses `.env` files for configuration
-- **Error Handling**: Comprehensive error handling and debugging output
-- **Multiple API Strategies**: Falls back to different API approaches if initial requests fail
+- **Python PoC**: A proof-of-concept for CurseForge API integration and mod downloading.
+- **Golang CLI**: A new, extensible CLI tool for server admins, with planned features for backup, update, restore, and notifications.
 
-## Setup (Python PoC)
+---
 
-1. **Clone and navigate to the project:**
-   ```bash
-   git clone <repository-url>
-   cd curseforge-autoupdate
-   ```
+## Python Proof-of-Concept
 
-2. **Navigate to the Python PoC directory:**
-   ```bash
-   cd python
-   ```
+Located in [`python/`](python/). See [`python/README.md`](python/README.md) for full details.
 
-3. **Create a `.env` file:**
-   ```bash
-   # Create .env file with your configuration
-   CURSEFORGE_API_KEY=your_api_key_here
-   MOD_ID=1300837
-   DOWNLOAD_PATH=./downloads
-   ```
+**Features:**
+- Connects to CurseForge Core API v1
+- Fetches mod info, lists files, downloads latest file
+- Uses `.env` for config (API key, mod ID, download path)
+- Handles errors and API fallbacks
 
-4. **Install Python dependencies:**
-   ```bash
-   pip install -r requirements.txt
-   ```
+**Quickstart:**
+```bash
+cd python
+pip install -r requirements.txt
+cp .env.example .env  # or create .env manually
+python poc.py
+```
 
-5. **Run the PoC script:**
-   ```bash
+See [`python/README.md`](python/README.md) for CLI usage, library usage, and config options.
+
+---
+
+## Golang CLI (In Development)
+
+Located in [`golang/`](golang/). See [`golang/PLAN.md`](golang/PLAN.md) for full roadmap.
+
+**Current Status:**
+- CLI skeleton with commands: `init`, `check`, `update`, `backup`, `restore`, `notify`, `list`, `version`
+- Config management: supports TOML, YAML, JSON, and .env templates
+- Embedded config templates and interactive config creation
+- Modular API client for CurseForge (mod info, file listing, download, search)
+
+**Planned Features:**
+- Full modpack update automation (backup, update, restore)
+- Discord/webhook notifications
+- Minecraft server integration (start/stop, notify players)
+- Multi-modpack and multi-server support
+- Scheduling, retention, rollback, and more
+
+**Example CLI Usage:**
+```bash
+cd golang
+go run ./cmd/cli/main.go --init toml   # Scaffold config
+go run ./cmd/cli/main.go check          # Check mod exists
+go run ./cmd/cli/main.go update         # (Planned) Update modpack
+```
+
+---
+
+## Directory Structure
+
+```
+curseforge-autoupdate/
+├── golang/      # Golang CLI implementation
+│   ├── cmd/cli/         # CLI entry and commands
+│   ├── internal/api/    # CurseForge API client
+│   ├── internal/server/ # Server/backup logic
+│   ├── internal/config/ # Config types/templates
+│   ├── helper/          # Env, filesystem, version helpers
+│   └── templates/       # Config templates
+├── python/      # Python PoC and library
+│   ├── updater/         # Main package code
+│   ├── cli.py           # CLI
+│   ├── poc.py           # Legacy PoC
+│   └── downloads/       # Downloaded files
+├── LICENSE
+├── README.md    # This file
+```
+
+---
+
+## Development Plan (Golang)
+
+See [`golang/DEVELOPMENT_PLAN.md`](golang/DEVELOPMENT_PLAN.md) for a detailed roadmap, including:
+- Enhanced config system (multi-format, templates)
+- Modular API client
+- Command structure: `init`, `check`, `update`, `backup`, `restore`, `notify`, `list`, `version`
+- Server management, backup/restore, notification, scheduling
+
+---
+
+## Configuration Examples
+
+**Python (.env):**
+```env
+CURSEFORGE_API_KEY=your_api_key_here
+MOD_ID=123456
+DOWNLOAD_PATH=./downloads
+```
+
+**Golang (config.toml):**
+```toml
+api_key = "your_api_key_here"
+mod_id = 123456
+# ...see templates for more fields
+```
+
+---
+
+## License
+[MIT](LICENSE)
+
+---
    python poc.py
    ```
 

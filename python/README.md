@@ -1,6 +1,65 @@
+
+A modern Python tool and library for automatically downloading and updating mods from CurseForge.
+
+## Features
+
+
+## Quick Setup
+
+1. Create and activate a virtual environment (optional but recommended):
+   ```bash
+   python3 -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   ```
+2. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+3. Copy the example environment file and add your CurseForge API key:
+   ```bash
+   cp .env.example .env
+   # Then edit .env and set CURSEFORGE_API_KEY=your_key
+   ```
+4. (Optional) Install as a package:
+   ```bash
+   pip install .
+   ```
+
+Get your API key from: https://console.curseforge.com/
+
+## Usage
+
+### CLI
+
+Run the updater using the CLI:
+
+```bash
+python cli.py --mod-id 123456
+# or, if installed:
+curseforge-update --mod-id 123456
+```
+
+See all options:
+```bash
+python cli.py --help
+```
+
+### As a Library
+
+You can use the updater in your own Python scripts:
+
+```python
+from updater import main, get_config
+config = get_config()
+```
+
 # CurseForge Auto-Updater
 
 A modern Python tool and library for automatically downloading and updating mods from CurseForge.
+
+## Vision
+
+The Python implementation serves as a proof-of-concept for CurseForge API integration and mod downloading. It demonstrates core update logic, error handling, and configuration management, and acts as a foundation for the more advanced Golang CLI. The goal is to provide a simple, reliable, and easily extensible tool for mod and modpack management.
 
 ## Features
 

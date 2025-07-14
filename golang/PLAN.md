@@ -193,37 +193,18 @@ curseforge-autoupdate
 - Server groups
 - Centralized management
 
-## **Implementation Timeline**
 
-### **Week 1-2: Core Infrastructure**
-- [ ] Enhance configuration system
-- [ ] Restructure API client
-- [ ] Implement basic backup functionality
-- [ ] Create config templates
+## **Vision**
 
-### **Week 3-4: Command Implementation**
-- [ ] Implement `init` command
-- [ ] Enhance `check` command
-- [ ] Implement `update` command
-- [ ] Add `backup` and `restore` commands
+The CurseForge Auto-Update CLI Tool aims to be the definitive solution for automated Minecraft modpack management on servers. The vision is to provide a robust, modular, and user-friendly tool that empowers server administrators to:
 
-### **Week 5-6: Server Management**
-- [ ] Minecraft server integration
-- [ ] Process management
-- [ ] File system operations
-- [ ] Error handling
+- Effortlessly keep modpacks up to date with minimal downtime and maximum reliability
+- Ensure data safety through automated and manual backup/restore workflows
+- Integrate seamlessly with notification systems (Discord, webhooks) for real-time updates and alerts
+- Support advanced features such as scheduling, multi-server management, and extensibility for future needs
+- Maintain a configuration-driven, fail-safe, and secure environment for all operations
 
-### **Week 7-8: Notification System**
-- [ ] Discord integration
-- [ ] Webhook support
-- [ ] Message templates
-- [ ] Testing framework
-
-### **Week 9-10: Polish & Testing**
-- [ ] Comprehensive testing
-- [ ] Documentation
-- [ ] Error handling improvements
-- [ ] Performance optimization
+Development will proceed iteratively, focusing on core stability, extensibility, and user experience, with ongoing improvements and community feedback guiding future enhancements. There are no fixed deadlines—quality, maintainability, and adaptability are the primary goals.
 
 ## **Dependencies to Add**
 ```go

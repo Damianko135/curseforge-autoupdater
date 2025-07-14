@@ -151,7 +151,7 @@ func runInitDirect(format string) error {
 		if _, err := os.Stat(filename); err == nil {
 			return fmt.Errorf("%s already exists", filename)
 		}
-		templateName := "templates/init." + format
+		templateName := "templates/template." + format
 		contentBytes, err := embeddedTemplates.ReadFile(templateName)
 		if err != nil {
 			return fmt.Errorf("failed to read embedded template: %w", err)
