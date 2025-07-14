@@ -255,7 +255,7 @@ func SaveConfig(config *Config, configPath string) error {
 	v.Set("notifications.webhook.timeout", config.Notifications.Webhook.Timeout)
 
 	// Ensure directory exists
-	if err := os.MkdirAll(filepath.Dir(configPath), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(configPath), 0750); err != nil {
 		return fmt.Errorf("failed to create config directory: %w", err)
 	}
 

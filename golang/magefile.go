@@ -1,6 +1,5 @@
 //go:build mage
 
-// vscode:ignoreFileError
 package main
 
 import (
@@ -8,7 +7,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"sync"
+
+	"golang.org/x/sync/errgroup"
 
 	"github.com/magefile/mage/mg"
 	"github.com/magefile/mage/sh"
@@ -46,7 +46,7 @@ func Build() error {
 	return sh.RunV("go", "build", "-trimpath", "-o", binary, cliDir)
 }
 
-// Release builds the application for all target platforms (for release).
+// Release builds the application for all target platforms concurrently.
 func Release() error {
 	fmt.Println("Building release for all platforms...")
 
@@ -54,14 +54,11 @@ func Release() error {
 		return err
 	}
 
-	var wg sync.WaitGroup
-	var mu sync.Mutex
-	var errs []error
+	var eg errgroup.Group
 
 	for _, p := range platforms {
-		wg.Add(1)
-		go func(p struct{ goos, goarch, ext string }) {
-			defer wg.Done()
+		p := p // capture range variable
+		eg.Go(func() error {
 			binary := fmt.Sprintf("%s-%s-%s%s", binaryName, p.goos, p.goarch, p.ext)
 			binaryPath := filepath.Join(distDir, binary)
 
@@ -72,17 +69,14 @@ func Release() error {
 			}
 
 			if err := sh.RunWith(env, "go", "build", "-trimpath", "-o", binaryPath, cliDir); err != nil {
-				mu.Lock()
-				errs = append(errs, fmt.Errorf("failed to build %s: %w", binary, err))
-				mu.Unlock()
+				return fmt.Errorf("failed to build %s: %w", binary, err)
 			}
-		}(p)
+			return nil
+		})
 	}
 
-	wg.Wait()
-
-	if len(errs) > 0 {
-		return errors.Join(errs...)
+	if err := eg.Wait(); err != nil {
+		return err
 	}
 
 	fmt.Println("All builds completed successfully!")
@@ -166,7 +160,7 @@ func Security() error {
 	return sh.RunV("gosec", "./...")
 }
 
-// Install installs all required dev tools.
+// Install installs all required dev tools concurrently.
 func Install() error {
 	tools := []struct {
 		name, url, version string
@@ -179,11 +173,20 @@ func Install() error {
 		{"goimports", "golang.org/x/tools/cmd/goimports", "latest"},
 	}
 
+	var eg errgroup.Group
 	for _, t := range tools {
-		fmt.Printf("Installing %s...\n", t.name)
-		if err := sh.RunV("go", "install", t.url+"@"+t.version); err != nil {
-			return fmt.Errorf("failed to install %s: %w", t.name, err)
-		}
+		t := t // capture variable
+		eg.Go(func() error {
+			fmt.Printf("Installing %s...\n", t.name)
+			if err := sh.RunV("go", "install", t.url+"@"+t.version); err != nil {
+				return fmt.Errorf("failed to install %s: %w", t.name, err)
+			}
+			return nil
+		})
+	}
+
+	if err := eg.Wait(); err != nil {
+		return err
 	}
 
 	fmt.Println("All tools installed successfully!")
@@ -195,12 +198,24 @@ func Setup() {
 	mg.SerialDeps(Deps, Install)
 }
 
-// All runs the full build pipeline: Deps, Format, Test, Build.
+// All runs the full build pipeline: Clean, Deps, Format, Test, Build.
 func All() {
 	mg.SerialDeps(Clean, Deps, Format, Test, Build)
 }
 
-// CI runs the CI pipeline: Deps, Format, Lint, Test, Release.
-func CI() {
-	mg.SerialDeps(Clean, Deps, Format, Lint, Test, Release)
+// CI runs the CI pipeline: Clean, Deps, Format, Test, then Lint + Security in parallel, finally Release.
+func CI() error {
+	// Run initial tasks serially
+	mg.SerialDeps(Clean, Deps, Format, Test)
+
+	// Run Lint and Security concurrently
+	var eg errgroup.Group
+	eg.Go(Lint)
+	eg.Go(Security)
+	if err := eg.Wait(); err != nil {
+		return err
+	}
+
+	// Final release build
+	return Release()
 }

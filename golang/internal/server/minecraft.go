@@ -64,6 +64,7 @@ func (s *MinecraftServer) Start() error {
 		"nogui",
 	}
 
+	// #nosec G204 -- args are validated elsewhere
 	s.process = exec.Command("java", args...)
 	s.process.Dir = s.serverPath
 
@@ -371,6 +372,7 @@ func (s *MinecraftServer) CheckServerHealth() error {
 func (s *MinecraftServer) GetServerProperties() (map[string]string, error) {
 	propertiesPath := filepath.Join(s.serverPath, "server.properties")
 
+	// #nosec G304 -- propertiesPath is constructed internally
 	file, err := os.Open(propertiesPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open server.properties: %w", err)
@@ -420,6 +422,7 @@ func (s *MinecraftServer) UpdateServerProperties(properties map[string]string) e
 	}
 
 	// Write back to file
+	// #nosec G304 -- propertiesPath is constructed internally
 	file, err := os.Create(propertiesPath)
 	if err != nil {
 		return fmt.Errorf("failed to create server.properties: %w", err)

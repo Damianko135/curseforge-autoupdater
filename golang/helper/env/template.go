@@ -53,7 +53,7 @@ func WriteTOMLTemplate(filename string) error {
 	if err != nil {
 		return err
 	}
-	return os.WriteFile(filename, data, 0644)
+	return os.WriteFile(filename, data, 0600)
 }
 
 // WriteJSONTemplate writes a JSON config template
@@ -62,7 +62,7 @@ func WriteJSONTemplate(filename string) error {
 	if err != nil {
 		return err
 	}
-	return os.WriteFile(filename, data, 0644)
+	return os.WriteFile(filename, data, 0600)
 }
 
 // WriteYAMLTemplate writes a YAML config template
@@ -71,7 +71,7 @@ func WriteYAMLTemplate(filename string) error {
 	if err != nil {
 		return err
 	}
-	return os.WriteFile(filename, data, 0644)
+	return os.WriteFile(filename, data, 0600)
 }
 
 // WriteDotenvTemplate writes a .env template file based on the ConfigTemplate struct
@@ -97,7 +97,7 @@ func WriteDotenvTemplate(filename string) error {
 		}
 	}
 
-	return os.WriteFile(filename, []byte(sb.String()), 0644)
+	return os.WriteFile(filename, []byte(sb.String()), 0600)
 }
 
 // toString converts supported value types to string

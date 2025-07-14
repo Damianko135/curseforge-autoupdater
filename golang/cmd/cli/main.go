@@ -156,7 +156,7 @@ func runInitDirect(format string) error {
 		if err != nil {
 			return fmt.Errorf("failed to read embedded template: %w", err)
 		}
-		if err := os.WriteFile(filename, contentBytes, 0644); err != nil {
+		if err := os.WriteFile(filename, contentBytes, 0600); err != nil {
 			return fmt.Errorf("failed to write %s: %w", filename, err)
 		}
 		fmt.Printf("✅ %s created.\n", filename)
