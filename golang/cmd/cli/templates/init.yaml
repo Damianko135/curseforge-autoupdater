@@ -1,0 +1,16 @@
+api_key: your-api-key-here
+modpack_id: 0
+game_version: "1.20.1"
+server_path: /path/to/server
+backup_path: /path/to/backups
+server_jar_name: server.jar
+auto_update: false
+update_channel: stable
+notifications:
+  discord:
+    enabled: false
+    webhook_url: ""
+    channel_id: ""
+  webhook:
+    enabled: false
+    url: ""

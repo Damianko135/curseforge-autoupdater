@@ -1,0 +1,88 @@
+# CurseForge Auto-Update Configuration
+# This file contains the main configuration for the CurseForge Auto-Update CLI tool
+
+# ============================================================================
+# API Configuration
+# ============================================================================
+# Your CurseForge API key (required)
+# Get yours at: https://console.curseforge.com/
+api_key = "your-api-key-here"
+
+# ============================================================================
+# Modpack Configuration
+# ============================================================================
+# The CurseForge modpack ID to track
+modpack_id = 0
+
+# Target Minecraft version
+game_version = "1.20.1"
+
+# ============================================================================
+# Server Configuration
+# ============================================================================
+# Path to your Minecraft server directory
+server_path = "./server"
+
+# Path where backups will be stored
+backup_path = "./backups"
+
+# Name of the server JAR file
+server_jar_name = "server.jar"
+
+# ============================================================================
+# Update Configuration
+# ============================================================================
+# Enable automatic updates (be careful with this!)
+auto_update = false
+
+# Update channel: stable, beta, alpha
+update_channel = "stable"
+
+# ============================================================================
+# Logging Configuration
+# ============================================================================
+# Log level: debug, info, warn, error
+log_level = "info"
+
+# Log file path (empty for stdout only)
+log_file = ""
+
+# ============================================================================
+# Notification Configuration
+# ============================================================================
+[notifications.discord]
+# Enable Discord notifications
+enabled = false
+
+# Discord webhook URL
+webhook_url = ""
+
+# Discord channel ID (optional)
+channel_id = ""
+
+# Bot username for notifications
+username = "CurseForge Auto-Updater"
+
+# Bot avatar URL (optional)
+avatar_url = ""
+
+[notifications.webhook]
+# Enable generic webhook notifications
+enabled = false
+
+# Webhook URL
+url = ""
+
+# HTTP method (GET, POST, PUT, etc.)
+method = "POST"
+
+# Content type
+content_type = "application/json"
+
+# Request timeout
+timeout = "30s"
+
+# Custom headers (optional)
+# [notifications.webhook.headers]
+# "Authorization" = "Bearer your-token"
+# "X-Custom-Header" = "custom-value"
