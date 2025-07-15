@@ -8,8 +8,10 @@
 *.so
 *.dylib
 # Build binaries directories
+
 bin/
 dist/
+views/*.go
     
 
 # Test binary, built with `go test -c`

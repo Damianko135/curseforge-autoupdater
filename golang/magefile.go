@@ -9,20 +9,21 @@ import (
 	"os/exec"
 	"path/filepath"
 
-	"golang.org/x/sync/errgroup"
-
 	"github.com/magefile/mage/mg"
 	"github.com/magefile/mage/sh"
+	"golang.org/x/sync/errgroup"
 )
 
+// Constants for directories and binary names — adjust these to your project structure
 const (
-	binaryName = "cf-updater"
+	binaryName = "myapp" // Replace with your binary name
 	distDir    = "dist"
-	cliDir     = "./cmd/cli"
-	webDir     = "./cmd/web"
-	templDir   = "./views"
+	templDir   = "./templates" // Replace with your templ directory
+	cliDir     = "./cmd/myapp" // Replace with your CLI directory
+	webDir     = "./cmd/web"   // Replace with your web server directory
 )
 
+// Platforms for Release builds
 var platforms = []struct {
 	goos, goarch, ext string
 }{
@@ -32,102 +33,21 @@ var platforms = []struct {
 	{"darwin", "arm64", ""},
 }
 
-// All runs the full build pipeline: Clean, Deps, Format, Test, Build.
-func All() {
-	mg.SerialDeps(Clean, Deps, Format, Build)
-}
-
-// Build builds the application for the current platform.
-func Build() error {
-	fmt.Println("Building application...")
-
-	binary := binaryName
-	goos, err := sh.Output("go", "env", "GOOS")
-	if err != nil {
-		return fmt.Errorf("detecting GOOS: %w", err)
-	}
-	if goos == "windows" {
-		binary += ".exe"
-	}
-
-	return sh.RunV("go", "build", "-trimpath", "-o", binary, cliDir)
-}
-
-// CI runs the CI pipeline: Clean, Deps, Format, Test, then Lint + Security in parallel, finally Release.
-func CI() error {
-	mg.SerialDeps(Clean, Deps, Format)
-
-	var eg errgroup.Group
-	eg.Go(Lint)
-	eg.Go(Security)
-	if err := eg.Wait(); err != nil {
-		return err
-	}
-
-	return Release()
-}
-
-// Clean removes build artifacts, including Templ-generated files.
-func Clean() error {
-	fmt.Println("Cleaning build artifacts...")
-	var errs []error
-
-	// Remove local binaries
-	for _, f := range []string{binaryName, binaryName + ".exe"} {
-		if err := sh.Rm(f); err != nil && !os.IsNotExist(err) {
-			errs = append(errs, err)
-		}
-	}
-
-	// Remove dist folder
-	if err := os.RemoveAll(distDir); err != nil && !os.IsNotExist(err) {
-		errs = append(errs, err)
-	}
-
-	// Remove Templ-generated files (*.templ.go)
-	err := filepath.Walk(templDir, func(path string, info os.FileInfo, walkErr error) error {
-		if walkErr != nil {
-			return walkErr
-		}
-		if !info.IsDir() && filepath.Ext(path) == ".go" && filepath.Base(path) != "main.go" {
-			// Delete *.templ.go files (you can refine this match)
-			if matched, _ := filepath.Match("*_templ.go", filepath.Base(path)); matched {
-				if rmErr := os.Remove(path); rmErr != nil && !os.IsNotExist(rmErr) {
-					errs = append(errs, fmt.Errorf("failed to remove templ file %s: %w", path, rmErr))
-				}
-			}
-		}
-		return nil
-	})
-	if err != nil {
-		errs = append(errs, fmt.Errorf("walking templ dir: %w", err))
-	}
-
-	if len(errs) > 0 {
-		return errors.Join(errs...)
-	}
-
-	fmt.Println("Clean completed!")
-	return nil
-}
-
-// Deps downloads Go module dependencies.
-func Deps() error {
-	if err := sh.RunV("go", "mod", "download"); err != nil {
-		return err
-	}
-	return sh.RunV("go", "mod", "tidy")
-}
-
-// Dev runs the dev web server with hot reload using Air, or falls back to go run.
+// Dev runs the dev web server with hot reload using Air and templ.
 func Dev() error {
-	fmt.Println("Running in development mode...")
+	fmt.Println("Running in development mode with Templ and Air...")
 
+	// Check dependencies
 	if _, err := exec.LookPath("air"); err != nil {
 		fmt.Println("⚠️  'air' not found. Falling back to 'go run'.")
 		return sh.RunV("go", "run", webDir)
 	}
+	if _, err := exec.LookPath("templ"); err != nil {
+		fmt.Println("⚠️  'templ' not found. Please install it.")
+		return err
+	}
 
+	// Generate .air.toml if missing
 	if _, err := os.Stat(".air.toml"); os.IsNotExist(err) {
 		fmt.Println("⚠️  '.air.toml' not found. Generating custom config...")
 
@@ -138,8 +58,8 @@ tmp_dir = "cmd/web/tmp"
 
 [build]
   args_bin = []
-  bin = "cmd\\web\\tmp\\main.exe"
-  cmd = "go build -o ./cmd/web/tmp/main.exe ./cmd/web"
+  bin = "cmd/web/tmp/main"
+  cmd = "go build -o ./cmd/web/tmp/main ./cmd/web"
   delay = 1000
   exclude_dir = ["assets", "tmp", "vendor", "testdata"]
   exclude_file = []
@@ -191,19 +111,75 @@ tmp_dir = "cmd/web/tmp"
 		fmt.Println("✅ Custom .air.toml created.")
 	}
 
-	fmt.Println("🚀 Launching hot-reload dev server...")
-	// Run Air with the custom config
-	// Needs both air and templ to run
-	if err := sh.RunV("air", "-c", ".air.toml"); err != nil {
-		return fmt.Errorf("failed to run Air: %w", err)
+	// Run Air in a goroutine
+	var eg errgroup.Group
+	eg.Go(func() error {
+		fmt.Println("🚀 Launching hot-reload dev server with Air...")
+		return sh.RunV("air", "-c", ".air.toml")
+	})
+
+	// Run templ generate with watch in parallel
+	eg.Go(func() error {
+		fmt.Println("🚀 Running templ generate with --watch...")
+		return sh.RunV("templ", "generate", "--watch")
+	})
+
+	if err := eg.Wait(); err != nil {
+		return err
 	}
-	fmt.Println("Air is running! Press Ctrl+C to stop.")
-	// Now generate the templ files
-	if err := sh.RunV("templ", "generate", "--watch"); err != nil {
-		return fmt.Errorf("failed to generate templ files: %w", err)
-	}
-	fmt.Println("✅ Templ files generated successfully.")
+
 	return nil
+}
+
+// Clean removes build artifacts, including Templ-generated files.
+func Clean() error {
+	fmt.Println("Cleaning build artifacts...")
+	var errs []error
+
+	// Remove local binaries
+	for _, f := range []string{binaryName, binaryName + ".exe"} {
+		if err := sh.Rm(f); err != nil && !os.IsNotExist(err) {
+			errs = append(errs, err)
+		}
+	}
+
+	// Remove dist folder
+	if err := os.RemoveAll(distDir); err != nil && !os.IsNotExist(err) {
+		errs = append(errs, err)
+	}
+
+	// Remove Templ-generated files (*.templ.go)
+	err := filepath.Walk(templDir, func(path string, info os.FileInfo, walkErr error) error {
+		if walkErr != nil {
+			return walkErr
+		}
+		if !info.IsDir() && filepath.Ext(path) == ".go" {
+			if matched, _ := filepath.Match("*_templ.go", filepath.Base(path)); matched {
+				if rmErr := os.Remove(path); rmErr != nil && !os.IsNotExist(rmErr) {
+					errs = append(errs, fmt.Errorf("failed to remove templ file %s: %w", path, rmErr))
+				}
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		errs = append(errs, fmt.Errorf("walking templ dir: %w", err))
+	}
+
+	if len(errs) > 0 {
+		return errors.Join(errs...)
+	}
+
+	fmt.Println("Clean completed!")
+	return nil
+}
+
+// Deps downloads Go module dependencies.
+func Deps() error {
+	if err := sh.RunV("go", "mod", "download"); err != nil {
+		return err
+	}
+	return sh.RunV("go", "mod", "tidy")
 }
 
 // Format runs all formatting tools (go fmt + goimports).
@@ -238,9 +214,8 @@ func Install() error {
 
 	var eg errgroup.Group
 	for _, t := range tools {
-		t := t // capture loop variable
+		t := t // capture range variable
 		eg.Go(func() error {
-			// Check if binary is in PATH
 			if path, err := exec.LookPath(t.binary); err == nil {
 				fmt.Printf("Tool %s already installed at %s\n", t.binary, path)
 				return nil
@@ -251,7 +226,6 @@ func Install() error {
 			if err := sh.RunV(cmd[0], cmd[1:]...); err != nil {
 				return fmt.Errorf("failed to install %s: %w", t.binary, err)
 			}
-
 			fmt.Printf("Installed %s successfully\n", t.binary)
 			return nil
 		})
@@ -326,11 +300,6 @@ func Security() error {
 func Setup() {
 	mg.SerialDeps(Deps, Install)
 }
-
-// // Test runs unit tests.
-// func Test() error {
-// 	return sh.RunV("go", "test", "-v", "./...")
-// }
 
 // Tidy runs `go mod tidy` explicitly.
 func Tidy() error {

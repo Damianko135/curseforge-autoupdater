@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/a-h/templ"
+	"github.com/damianko135/curseforge-autoupdate/golang/views"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
@@ -10,7 +11,7 @@ func main() {
 	e := echo.New()
 
 	// Add middleware
-	e.Use(middleware.Logger())
+	// e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 	e.Use(middleware.CORS())
 
@@ -19,15 +20,15 @@ func main() {
 
 	// Routes
 	e.GET("/", func(c echo.Context) error {
-		return render(c, views.home())
+		return render(c, views.Status())
 	})
 
 	e.GET("/health", func(c echo.Context) error {
-		return render(c, views.health())
+		return render(c, views.Health())
 	})
 
 	e.GET("/status", func(c echo.Context) error {
-		return render(c, views.status())
+		return render(c, views.Status())
 	})
 
 	// Start server on port 8080

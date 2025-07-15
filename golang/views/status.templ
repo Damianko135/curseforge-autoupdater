@@ -2,14 +2,14 @@ package views
 
 import "time"
 
-templ status() {
-    @layout("System Status") {
+templ Status() {
+    @Layout("System Status") {
         <div class="container">
             <h2>System Status</h2>
             <div class="status-info">
                 <div class="info-card">
                     <h3>Server Information</h3>
-                    <p><strong>Started:</strong> { time.Now().Format("2006-01-02 15:04:05") }</p>
+                    <p id="time-display"><strong>Started:</strong> { time.Now().Format("2006-01-02 15:04:05") }</p>
                     <p><strong>Version:</strong> v1.0.0</p>
                     <p><strong>Environment:</strong> Development</p>
                 </div>
