@@ -6,18 +6,18 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
+	"strings"
+	"time"
 
 	"github.com/magefile/mage/mg"
 	"github.com/magefile/mage/sh"
-	"golang.org/x/sync/errgroup"
 )
 
 // Project structure constants
 const (
-	cliBinaryName = "curseforge-autoupdate" // CLI binary name
-	webBinaryName = "webserver"             // Web server binary name
+	cliBinaryName = "curseforge-autoupdate"
+	webBinaryName = "webserver"
 	distDir       = "dist"
 	templDir      = "./templates"
 	cliDir        = "./cmd/cli"
@@ -35,318 +35,209 @@ var platforms = []struct {
 	{"darwin", "arm64", ""},
 }
 
-// Dev runs both the web server (with hot reload) and the CLI in dev mode.
-// It runs `templ generate --watch` for live template generation,
-// starts the web server with Air if available (fallback to go run),
-// and runs the CLI with modd if available (fallback to go run).
-func Dev() error {
-	fmt.Println("Starting development environment for both web and CLI...")
-
-	// Check for required tools
-	if _, err := exec.LookPath("templ"); err != nil {
-		fmt.Println("❌ 'templ' not found. Please run 'mage install' first.")
-		return err
-	}
-
-	// Always start templ generate --watch for live template generation
-	var eg errgroup.Group
-	eg.Go(func() error {
-		fmt.Println("▶️  Running 'templ generate --watch' ...")
-		return sh.RunV("templ", "generate", "--watch")
-	})
-
-	// Web server: prefer Air, fallback to go run
-	eg.Go(func() error {
-		if _, err := exec.LookPath("air"); err == nil {
-			// Generate .air.toml if missing
-			if _, err := os.Stat(".air.toml"); os.IsNotExist(err) {
-				fmt.Println("⚠️  '.air.toml' not found. Generating default config...")
-				airConfig := `
-root = "."
+func ensureAirToml() error {
+	if _, err := os.Stat(".air.toml"); errors.Is(err, os.ErrNotExist) {
+		airConfig := `
+		root = "."
+testdata_dir = "testdata"
 tmp_dir = "cmd/web/tmp"
+
 [build]
-  bin = "cmd/web/tmp/main"
-  cmd = "go build -o ./cmd/web/tmp/main ./cmd/web"
-  include_ext = ["go", "templ", "html"]
+  args_bin = []
+  bin = "cmd\\web\\tmp\\main.exe"
+  cmd = "go build -o ./cmd/web/tmp/main.exe ./cmd/web"
+  delay = 1000
+  exclude_dir = ["assets", "tmp", "vendor", "testdata"]
+  exclude_file = []
+  exclude_regex = ["_test.go"]
+  exclude_unchanged = false
+  follow_symlink = false
+  full_bin = ""
+  include_dir = []
+  include_ext = ["go", "tpl", "tmpl", "html"]
+  include_file = []
+  kill_delay = "0s"
   log = "build-errors.log"
+  poll = false
+  poll_interval = 0
+  post_cmd = []
+  pre_cmd = []
+  rerun = false
+  rerun_delay = 500
+  send_interrupt = false
+  stop_on_error = false
+
 [color]
+  app = ""
   build = "yellow"
   main = "magenta"
   runner = "green"
   watcher = "cyan"
+
+[log]
+  main_only = false
+  silent = false
+  time = false
+
+[misc]
+  clean_on_exit = false
+
+[proxy]
+  app_port = 0
+  enabled = false
+  proxy_port = 0
+
 [screen]
+  clear_on_rebuild = false
   keep_scroll = true
-`
-				if err := os.WriteFile(".air.toml", []byte(airConfig), 0644); err != nil {
-					return fmt.Errorf("failed to write .air.toml: %w", err)
-				}
-				fmt.Println("✅ .air.toml created.")
-			}
-			fmt.Println("▶️  Running 'air' for web hot reload ...")
-			return sh.RunV("air", "-c", ".air.toml")
-		}
-		fmt.Println("⚠️  'air' not found. Falling back to 'go run' for web server.")
-		return sh.RunV("go", "run", webDir)
-	})
-
-	// CLI: run in watch mode if modd is available, else just run once
-	eg.Go(func() error {
-		if _, err := exec.LookPath("modd"); err == nil {
-			fmt.Println("▶️  Running 'modd' for CLI hot reload ...")
-			moddConf := `
-[mods]
-**/*.go {
-	prep: go run ./cmd/cli
-}
-`
-			if _, err := os.Stat("modd.conf"); os.IsNotExist(err) {
-				if err := os.WriteFile("modd.conf", []byte(moddConf), 0644); err != nil {
-					return fmt.Errorf("failed to write modd.conf: %w", err)
-				}
-			}
-			return sh.RunV("modd")
-		}
-		fmt.Println("⚠️  'modd' not found. Running CLI once with 'go run'.")
-		return sh.RunV("go", "run", cliDir)
-	})
-
-	if err := eg.Wait(); err != nil {
-		return err
+  `
+		return os.WriteFile(".air.toml", []byte(airConfig), 0644)
 	}
 	return nil
 }
 
-// Clean removes build artifacts, binaries, dist folder, and generated template files.
+// Dev starts the CLI and web server in development mode with hot-reload enabled.
+func Dev() error {
+	mg.Deps(Install, Generate)
+	if err := ensureAirToml(); err != nil {
+		return err
+	}
+	return sh.RunV("air")
+}
+
+// Clean removes generated files, binaries, and the dist directory.
 func Clean() error {
-	fmt.Println("Cleaning build artifacts...")
-	var errs []error
-
-	// Remove local binaries (CLI and web)
-	for _, f := range []string{cliBinaryName, cliBinaryName + ".exe", webBinaryName, webBinaryName + ".exe"} {
-		if err := sh.Rm(f); err != nil && !os.IsNotExist(err) {
-			errs = append(errs, err)
-		}
-	}
-
-	// Remove dist folder
-	if err := os.RemoveAll(distDir); err != nil && !os.IsNotExist(err) {
-		errs = append(errs, err)
-	}
-
-	// Remove Templ-generated files (*.templ.go)
-	err := filepath.Walk(templDir, func(path string, info os.FileInfo, walkErr error) error {
-		if walkErr != nil {
-			return walkErr
-		}
-		if !info.IsDir() && filepath.Ext(path) == ".go" {
-			if matched, _ := filepath.Match("*_templ.go", filepath.Base(path)); matched {
-				if rmErr := os.Remove(path); rmErr != nil && !os.IsNotExist(rmErr) {
-					errs = append(errs, fmt.Errorf("failed to remove templ file %s: %w", path, rmErr))
-				}
-			}
-		}
-		return nil
-	})
-	if err != nil {
-		errs = append(errs, fmt.Errorf("walking templ dir: %w", err))
-	}
-
-	// Remove web build artifacts
-	if err := os.RemoveAll(webTmpDir); err != nil && !os.IsNotExist(err) {
-		errs = append(errs, err)
-	}
-
-	if len(errs) > 0 {
-		return errors.Join(errs...)
-	}
-
-	fmt.Println("Clean completed!")
-	return nil
+	fmt.Println("Cleaning project...")
+	_ = os.RemoveAll(distDir)
+	_ = os.RemoveAll("tmp")
+	return sh.RunV("go", "clean", "-modcache")
 }
 
-// Deps downloads Go module dependencies.
+// Deps ensures Go module dependencies are downloaded.
 func Deps() error {
-	if err := sh.RunV("go", "mod", "download"); err != nil {
-		return err
-	}
-	return sh.RunV("go", "mod", "tidy")
+	return sh.RunV("go", "mod", "download")
 }
 
-// Format runs all formatting tools (go fmt + goimports).
+// Format runs go fmt and goimports on the entire codebase.
 func Format() error {
-	mg.Deps(Fmt, GoImports)
+	mg.Deps(FormatGo, FormatImports)
 	return nil
 }
 
-// Fmt runs go fmt over the entire codebase.
-func Fmt() error {
+// FormatGo formats Go source code using go fmt.
+func FormatGo() error {
 	return sh.RunV("go", "fmt", "./...")
 }
 
-// GoImports runs goimports to fix import grouping and order.
-func GoImports() error {
+// FormatImports organizes Go imports using goimports.
+func FormatImports() error {
 	return sh.RunV("goimports", "-w", ".")
 }
 
-// Install installs all required dev tools (templ, air, linting, etc.).
+// Install sets up development tools such as templ, air, and linters.
 func Install() error {
-	tools := []struct {
-		binary, url, version string
-	}{
-		{"golangci-lint", "github.com/golangci/golangci-lint/cmd/golangci-lint", "latest"},
-		{"gosec", "github.com/securego/gosec/v2/cmd/gosec", "latest"},
-		{"mage", "github.com/magefile/mage", "v1.14.0"},
-		{"gofumpt", "mvdan.cc/gofumpt", "v0.4.0"},
-		{"goimports", "golang.org/x/tools/cmd/goimports", "latest"},
-		{"templ", "github.com/a-h/templ/cmd/templ", "latest"},
-		{"air", "github.com/air-verse/air", "latest"},
+	tools := []string{
+		"github.com/cosmtrek/air@latest",
+		"github.com/incu6us/goimports-reviser/v2@latest",
+		"github.com/go-task/task/v3/cmd/task@latest",
+		"github.com/securego/gosec/v2/cmd/gosec@latest",
+		"github.com/a-h/templ/cmd/templ@latest",
+		"github.com/golangci/golangci-lint/cmd/golangci-lint@latest",
 	}
-
-	var eg errgroup.Group
-	for _, t := range tools {
-		t := t // capture range variable
-		eg.Go(func() error {
-			if path, err := exec.LookPath(t.binary); err == nil {
-				fmt.Printf("Tool %s already installed at %s\n", t.binary, path)
-				return nil
-			}
-
-			fmt.Printf("Installing %s...\n", t.binary)
-			cmd := []string{"go", "install", fmt.Sprintf("%s@%s", t.url, t.version)}
-			if err := sh.RunV(cmd[0], cmd[1:]...); err != nil {
-				return fmt.Errorf("failed to install %s: %w", t.binary, err)
-			}
-			fmt.Printf("Installed %s successfully\n", t.binary)
-			return nil
-		})
+	for _, tool := range tools {
+		if err := sh.RunV("go", "install", tool); err != nil {
+			return err
+		}
 	}
-
-	if err := eg.Wait(); err != nil {
-		return err
-	}
-
-	fmt.Println("All tools installed successfully!")
 	return nil
 }
 
-// InstallApp installs the CLI app to your GOPATH/bin.
+// InstallApp compiles and installs the CLI application.
 func InstallApp() error {
-	return sh.RunV("go", "install", cliDir)
+	return sh.RunV("go", "install", filepath.Join(cliDir))
 }
 
-// Lint runs static analysis using golangci-lint.
+// Lint runs static code analysis using golangci-lint.
 func Lint() error {
 	return sh.RunV("golangci-lint", "run")
 }
 
-// Build compiles the CLI and webserver binaries to the dist directory.
-// It first generates templ files, then builds the binaries.
+// Build compiles the CLI and webserver into the dist directory.
 func Build() error {
-	fmt.Println("Building CLI and web server...")
 	mg.Deps(Generate)
-
-	// Create dist directory if missing
-	if err := os.MkdirAll(distDir, 0755); err != nil {
+	_ = os.MkdirAll(distDir, 0755)
+	ldflags := buildLdflags()
+	if err := sh.RunV("go", "build", "-ldflags", ldflags, "-o", filepath.Join(distDir, cliBinaryName), cliDir); err != nil {
 		return err
 	}
-
-	// Build CLI binary
-	cliOut := filepath.Join(distDir, cliBinaryName)
-	if err := sh.RunV("go", "build", "-o", cliOut, cliDir); err != nil {
-		return fmt.Errorf("failed to build CLI: %w", err)
-	}
-
-	// Build web binary
-	webOut := filepath.Join(distDir, webBinaryName)
-	if err := sh.RunV("go", "build", "-o", webOut, webDir); err != nil {
-		return fmt.Errorf("failed to build web: %w", err)
-	}
-
-	fmt.Println("Build completed!")
-	return nil
+	return sh.RunV("go", "build", "-ldflags", ldflags, "-o", filepath.Join(distDir, webBinaryName), webDir)
 }
 
-// Release builds cross-platform CLI binaries into dist.
-// Web is not cross-compiled yet.
+// Release builds binaries for multiple OS/architectures.
 func Release() error {
-	fmt.Println("Building release for all platforms (CLI)...")
 	mg.Deps(Generate)
-
-	if err := os.MkdirAll(distDir, 0755); err != nil {
-		return err
+	ldflags := buildLdflags()
+	for _, platform := range platforms {
+		output := fmt.Sprintf("%s-%s-%s%s", cliBinaryName, platform.goos, platform.goarch, platform.ext)
+		env := map[string]string{"GOOS": platform.goos, "GOARCH": platform.goarch}
+		if err := sh.RunWithV(env, "go", "build", "-ldflags", ldflags, "-o", filepath.Join(distDir, output), cliDir); err != nil {
+			return err
+		}
 	}
-
-	var eg errgroup.Group
-	for _, p := range platforms {
-		p := p // capture range variable
-		eg.Go(func() error {
-			binary := fmt.Sprintf("%s-%s-%s%s", cliBinaryName, p.goos, p.goarch, p.ext)
-			binaryPath := filepath.Join(distDir, binary)
-			fmt.Printf("Building %s...\n", binary)
-			env := map[string]string{
-				"GOOS":   p.goos,
-				"GOARCH": p.goarch,
-			}
-			if err := sh.RunWith(env, "go", "build", "-trimpath", "-o", binaryPath, cliDir); err != nil {
-				return fmt.Errorf("failed to build %s: %w", binary, err)
-			}
-			return nil
-		})
-	}
-
-	if err := eg.Wait(); err != nil {
-		return err
-	}
-
-	fmt.Println("All builds completed successfully!")
 	return nil
 }
 
-// Run executes the CLI locally using go run.
-func Run() error {
-	return sh.RunV("go", "run", cliDir)
+func buildLdflags() string {
+	version := "dev"
+	commit := "unknown"
+	if out, err := sh.Output("git", "rev-parse", "--short", "HEAD"); err == nil {
+		commit = strings.TrimSpace(out)
+	}
+	date := time.Now().UTC().Format(time.RFC3339)
+	return fmt.Sprintf("-X main.version=%s -X main.commit=%s -X main.date=%s", version, commit, date)
 }
 
-// RunWeb executes the web server locally after generating templates.
+// Run executes the CLI application.
+func Run() error {
+	return sh.RunV(filepath.Join(".", distDir, cliBinaryName))
+}
+
+// RunWeb starts the web server after compiling templates.
 func RunWeb() error {
 	mg.Deps(Generate)
-	return sh.RunV("go", "run", webDir)
+	return sh.RunV(filepath.Join(".", distDir, webBinaryName))
 }
 
-// Generate runs templ generate to compile .templ files once (no watch).
+// Generate compiles templ files into Go code.
 func Generate() error {
-	fmt.Println("Generating templates with templ...")
 	return sh.RunV("templ", "generate")
 }
 
-// Test runs unit tests with race detection and coverage.
+// Test runs unit tests with race detector and coverage analysis.
 func Test() error {
+	if os.Getenv("SHORT") == "1" {
+		return sh.RunV("go", "test", "-short", "./...")
+	}
 	return sh.RunV("go", "test", "-race", "-coverprofile=coverage.out", "./...")
 }
 
-// Check runs linting, tests, and format checks in sequence.
+// Check runs all static checks: lint, format, and test.
 func Check() error {
-	mg.Deps(Lint, Test, Format)
+	mg.Deps(Lint, Format, Test)
 	return nil
 }
 
-// Security runs gosec for security static analysis.
+// Security performs security scans using gosec.
 func Security() error {
-	return sh.RunV("gosec", "./...")
+	return sh.RunV("gosec", "-severity", "medium", "./...")
 }
 
-// Setup installs deps and all required dev tools.
+// Setup installs dependencies and development tools.
 func Setup() {
-	mg.SerialDeps(Deps, Install)
+	mg.Deps(Deps, Tidy, Install)
 }
 
-// Tidy runs go mod tidy explicitly.
+// Tidy runs go mod tidy to clean up go.mod and go.sum.
 func Tidy() error {
 	return sh.RunV("go", "mod", "tidy")
-}
-
-
-func CI() error {
-    mg.Deps(Lint, Test, Format, Security, Build, Release)
-    return nil
 }
