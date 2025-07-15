@@ -1,13 +1,9 @@
 package main
 
 import (
-	"net/http"
-
 	"github.com/a-h/templ"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
-
-	"github.com/damianko135/curseforge-autoupdate/golang/views"
 )
 
 func main() {
