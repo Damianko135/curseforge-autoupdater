@@ -1,0 +1,23 @@
+package views
+templ health() {
+    @layout("Health Check") {
+        <div class="container">
+            <h2>System Health</h2>
+            <div class="health-status">
+                <div class="status-item">
+                    <h3>Service Status</h3>
+                    <span class="status-indicator status-ok">✓ Running</span>
+                </div>
+                <div class="status-item">
+                    <h3>Database Connection</h3>
+                    <span class="status-indicator status-ok">✓ Connected</span>
+                </div>
+                <div class="status-item">
+                    <h3>API Status</h3>
+                    <span class="status-indicator status-teapot">🫖 I'm a teapot</span>
+                </div>
+            </div>
+            <a href="/" class="btn btn-primary">Back to Home</a>
+        </div>
+    }
+}

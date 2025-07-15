@@ -1,0 +1,41 @@
+package views
+
+import "time"
+
+templ status() {
+    @layout("System Status") {
+        <div class="container">
+            <h2>System Status</h2>
+            <div class="status-info">
+                <div class="info-card">
+                    <h3>Server Information</h3>
+                    <p><strong>Started:</strong> { time.Now().Format("2006-01-02 15:04:05") }</p>
+                    <p><strong>Version:</strong> v1.0.0</p>
+                    <p><strong>Environment:</strong> Development</p>
+                </div>
+                
+                <div class="info-card">
+                    <h3>Configuration</h3>
+                    <p><strong>Port:</strong> 8080</p>
+                    <p><strong>Static Files:</strong> /static</p>
+                    <p><strong>Templates:</strong> templ</p>
+                </div>
+                
+                <div class="info-card">
+                    <h3>Features</h3>
+                    <ul>
+                        <li>Templ templates</li>
+                        <li>Static file serving</li>
+                        <li>CORS enabled</li>
+                        <li>Request logging</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="actions">
+                <a href="/" class="btn btn-primary">Back to Home</a>
+                <a href="/health" class="btn btn-secondary">Check Health</a>
+            </div>
+        </div>
+    }
+}

@@ -1,0 +1,24 @@
+package views
+templ home() {
+    @layout("Home") {
+        <div class="container">
+            <h2>Welcome to CurseForge AutoUpdate</h2>
+            <p>This is a web interface for managing your CurseForge modpack updates.</p>
+            
+            <div class="features">
+                <h3>Features</h3>
+                <ul>
+                    <li>Automatic modpack updates</li>
+                    <li>Backup and restore functionality</li>
+                    <li>Discord notifications</li>
+                    <li>Version management</li>
+                </ul>
+            </div>
+            
+            <div class="actions">
+                <a href="/health" class="btn btn-primary">Check Health</a>
+                <a href="/status" class="btn btn-secondary">View Status</a>
+            </div>
+        </div>
+    }
+}

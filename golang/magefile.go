@@ -98,7 +98,7 @@ func Deps() error {
 }
 
 // Dev runs the dev web server with hot reload using Air, or falls back to go run.
-func Dev() error {
+func Dev() (error) {
 	fmt.Println("Running in development mode...")
 
 	if _, err := exec.LookPath("air"); err != nil {
@@ -170,7 +170,18 @@ tmp_dir = "cmd/web/tmp"
 	}
 
 	fmt.Println("🚀 Launching hot-reload dev server...")
-	return sh.RunV("air", "-c", ".air.toml")
+	// Run Air with the custom config
+	// Needs both air and templ to run
+	if err := sh.RunV("air", "-c", ".air.toml"); err != nil {
+		return fmt.Errorf("failed to run Air: %w", err)
+	}
+	fmt.Println("Air is running! Press Ctrl+C to stop.")
+	// Now generate the templ files
+	if err := sh.RunV("templ", "generate", "--watch"); err != nil {
+		return fmt.Errorf("failed to generate templ files: %w", err)
+	}
+	fmt.Println("✅ Templ files generated successfully.")
+	return nil
 }
 
 
