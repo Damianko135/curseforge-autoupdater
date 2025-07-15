@@ -3,6 +3,7 @@ package env
 import (
 	"fmt"
 	"log"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -10,23 +11,29 @@ import (
 )
 
 func LoadConfig(configPath string) error {
+	// If configPath has an extension, treat it as a file path (absolute or relative)
 	ext := strings.TrimPrefix(filepath.Ext(configPath), ".")
-
-	// If configPath has an extension, treat it as a full file path
 	if ext != "" {
-		viper.SetConfigFile(configPath)
+		// If the path is not absolute, make it relative to the current working directory
+		absPath, err := filepath.Abs(configPath)
+		if err != nil {
+			return fmt.Errorf("could not resolve config path: %w", err)
+		}
+		viper.SetConfigFile(absPath)
+		viper.SetConfigType(ext)
 	} else {
-		// Default fallback: assume it's a name like "config" with .toml
+		// Treat as config name (no extension), search in current and standard locations
 		viper.SetConfigName(configPath)
-		ext = "toml"
+		viper.SetConfigType("toml")
+		viper.AddConfigPath(".")
+		viper.AddConfigPath("/etc/curseforge-autoupdater")
+		home, err := os.UserHomeDir()
+		if err == nil {
+			viper.AddConfigPath(filepath.Join(home, ".curseforge-autoupdater"))
+		} else {
+			log.Printf("⚠️ Could not resolve user home directory: %v", err)
+		}
 	}
-
-	viper.SetConfigType(ext)
-
-	// Add common search paths
-	viper.AddConfigPath(".")
-	viper.AddConfigPath("/etc/curseforge-autoupdater")
-	viper.AddConfigPath("$HOME/.curseforge-autoupdater")
 
 	if err := viper.ReadInConfig(); err != nil {
 		// Not fatal, caller decides what to do
