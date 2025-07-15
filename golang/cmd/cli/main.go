@@ -106,7 +106,7 @@ func setupRootCommand(cfg *Config, configPath *string, initFormat *string) (*cob
 			return fmt.Errorf("failed to load config: %w", err)
 		}
 		if err := viper.Unmarshal(cfg); err != nil {
-			return fmt.Errorf("failed to unmarshal config: %w", err)
+			return fmt.Errorf("failed to read values: %w", err)
 		}
 		if cfg.APIToken == "" {
 			cfg.APIToken = getConfigValue("API_KEY", "")
