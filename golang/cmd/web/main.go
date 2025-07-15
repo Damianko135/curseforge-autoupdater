@@ -19,6 +19,7 @@ func main() {
 	e.Static("/static", "public")
 
 	// Routes
+	// NOTE: It will through an error if templ hasnt build the files yet.
 	e.GET("/", func(c echo.Context) error {
 		return render(c, views.Status())
 	})
