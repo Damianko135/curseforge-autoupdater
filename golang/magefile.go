@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 
 	"golang.org/x/sync/errgroup"
@@ -96,6 +97,85 @@ func Deps() error {
 	return sh.RunV("go", "mod", "tidy")
 }
 
+// Dev runs the dev web server with hot reload using Air, or falls back to go run.
+func Dev() error {
+	fmt.Println("Running in development mode...")
+
+	if _, err := exec.LookPath("air"); err != nil {
+		fmt.Println("⚠️  'air' not found. Falling back to 'go run'.")
+		return sh.RunV("go", "run", webDir)
+	}
+
+	if _, err := os.Stat(".air.toml"); os.IsNotExist(err) {
+		fmt.Println("⚠️  '.air.toml' not found. Generating custom config...")
+
+		airConfig := `
+root = "."
+testdata_dir = "testdata"
+tmp_dir = "cmd/web/tmp"
+
+[build]
+  args_bin = []
+  bin = "cmd\\web\\tmp\\main.exe"
+  cmd = "go build -o ./cmd/web/tmp/main.exe ./cmd/web"
+  delay = 1000
+  exclude_dir = ["assets", "tmp", "vendor", "testdata"]
+  exclude_file = []
+  exclude_regex = ["_test.go"]
+  exclude_unchanged = false
+  follow_symlink = false
+  full_bin = ""
+  include_dir = []
+  include_ext = ["go", "tpl", "tmpl", "html"]
+  include_file = []
+  kill_delay = "0s"
+  log = "build-errors.log"
+  poll = false
+  poll_interval = 0
+  post_cmd = []
+  pre_cmd = []
+  rerun = false
+  rerun_delay = 500
+  send_interrupt = false
+  stop_on_error = false
+
+[color]
+  app = ""
+  build = "yellow"
+  main = "magenta"
+  runner = "green"
+  watcher = "cyan"
+
+[log]
+  main_only = false
+  silent = false
+  time = false
+
+[misc]
+  clean_on_exit = false
+
+[proxy]
+  app_port = 0
+  enabled = false
+  proxy_port = 0
+
+[screen]
+  clear_on_rebuild = false
+  keep_scroll = true
+`
+		if err := os.WriteFile(".air.toml", []byte(airConfig), 0644); err != nil {
+			return fmt.Errorf("failed to write .air.toml: %w", err)
+		}
+		fmt.Println("✅ Custom .air.toml created.")
+	}
+
+	fmt.Println("🚀 Launching hot-reload dev server...")
+	return sh.RunV("air", "-c", ".air.toml")
+}
+
+
+
+
 // Format runs all formatting tools (go fmt + goimports).
 func Format() error {
 	mg.Deps(Fmt, GoImports)
@@ -115,24 +195,34 @@ func GoImports() error {
 // Install installs all required dev tools concurrently.
 func Install() error {
 	tools := []struct {
-		name, url, version string
+		binary, url, version string
 	}{
 		{"golangci-lint", "github.com/golangci/golangci-lint/cmd/golangci-lint", "latest"},
 		{"gosec", "github.com/securego/gosec/v2/cmd/gosec", "latest"},
-		{"go-toml", "github.com/pelletier/go-toml/v2/cmd/tomlv", "latest"},
 		{"mage", "github.com/magefile/mage", "v1.14.0"},
 		{"gofumpt", "mvdan.cc/gofumpt", "v0.4.0"},
 		{"goimports", "golang.org/x/tools/cmd/goimports", "latest"},
+		{"templ", "github.com/a-h/templ/cmd/templ", "latest"},
+		{"air", "github.com/air-verse/air", "latest"},
 	}
 
 	var eg errgroup.Group
 	for _, t := range tools {
-		t := t // capture variable
+		t := t // capture loop variable
 		eg.Go(func() error {
-			fmt.Printf("Installing %s...\n", t.name)
-			if err := sh.RunV("go", "install", t.url+"@"+t.version); err != nil {
-				return fmt.Errorf("failed to install %s: %w", t.name, err)
+			// Check if binary is in PATH
+			if path, err := exec.LookPath(t.binary); err == nil {
+				fmt.Printf("Tool %s already installed at %s\n", t.binary, path)
+				return nil
 			}
+
+			fmt.Printf("Installing %s...\n", t.binary)
+			cmd := []string{"go", "install", fmt.Sprintf("%s@%s", t.url, t.version)}
+			if err := sh.RunV(cmd[0], cmd[1:]...); err != nil {
+				return fmt.Errorf("failed to install %s: %w", t.binary, err)
+			}
+
+			fmt.Printf("Installed %s successfully\n", t.binary)
 			return nil
 		})
 	}
