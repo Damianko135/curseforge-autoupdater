@@ -20,6 +20,7 @@ const (
 	distDir    = "dist"
 	cliDir     = "./cmd/cli"
 	webDir     = "./cmd/web"
+	templDir   = "./views"
 )
 
 var platforms = []struct {
@@ -66,19 +67,40 @@ func CI() error {
 	return Release()
 }
 
-// Clean removes build artifacts.
+// Clean removes build artifacts, including Templ-generated files.
 func Clean() error {
 	fmt.Println("Cleaning build artifacts...")
 	var errs []error
 
+	// Remove local binaries
 	for _, f := range []string{binaryName, binaryName + ".exe"} {
 		if err := sh.Rm(f); err != nil && !os.IsNotExist(err) {
 			errs = append(errs, err)
 		}
 	}
 
+	// Remove dist folder
 	if err := os.RemoveAll(distDir); err != nil && !os.IsNotExist(err) {
 		errs = append(errs, err)
+	}
+
+	// Remove Templ-generated files (*.templ.go)
+	err := filepath.Walk(templDir, func(path string, info os.FileInfo, walkErr error) error {
+		if walkErr != nil {
+			return walkErr
+		}
+		if !info.IsDir() && filepath.Ext(path) == ".go" && filepath.Base(path) != "main.go" {
+			// Delete *.templ.go files (you can refine this match)
+			if matched, _ := filepath.Match("*_templ.go", filepath.Base(path)); matched {
+				if rmErr := os.Remove(path); rmErr != nil && !os.IsNotExist(rmErr) {
+					errs = append(errs, fmt.Errorf("failed to remove templ file %s: %w", path, rmErr))
+				}
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		errs = append(errs, fmt.Errorf("walking templ dir: %w", err))
 	}
 
 	if len(errs) > 0 {
@@ -88,6 +110,7 @@ func Clean() error {
 	fmt.Println("Clean completed!")
 	return nil
 }
+
 
 // Deps downloads Go module dependencies.
 func Deps() error {
