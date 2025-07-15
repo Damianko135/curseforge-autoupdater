@@ -6,12 +6,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func newBackupCmd() *cobra.Command {
+func backupCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "backup",
 		Short: "Manual backup operations.",
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println("[backup] Manual backup not yet implemented.")
+			fmt.Fprintln(cmd.OutOrStdout(), "[backup] Manual backup not yet implemented.")
 		},
 	}
 }

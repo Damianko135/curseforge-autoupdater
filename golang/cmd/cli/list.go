@@ -6,12 +6,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func newListCmd() *cobra.Command {
+func listCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "list",
 		Short: "List available commands/info.",
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println("[list] List not yet implemented.")
+			fmt.Fprintln(cmd.OutOrStdout(), "[list] List not yet implemented.")
 		},
 	}
 }

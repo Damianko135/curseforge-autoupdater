@@ -114,6 +114,7 @@ func Format() error {
 
 // Test runs unit tests.
 func Test() error {
+	// Need to add tests in the codebase for this to work.
 	return sh.RunV("go", "test", "-v", "./...")
 }
 

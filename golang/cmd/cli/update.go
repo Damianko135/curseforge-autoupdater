@@ -6,12 +6,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func newUpdateCmd() *cobra.Command {
+func updateCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "update",
 		Short: "Perform the full update process.",
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println("[update] Update process not yet implemented.")
+			// TODO: Replace with the update logic
+			fmt.Fprintln(cmd.OutOrStdout(), "[update] Update process not yet implemented.")
 		},
 	}
 }
