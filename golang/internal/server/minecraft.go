@@ -9,6 +9,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/damianko135/curseforge-autoupdate/golang/helper/filesystem"
 )
 
 // MinecraftServer represents a Minecraft server instance
@@ -46,12 +48,12 @@ func (s *MinecraftServer) Start() error {
 
 	// Check if server JAR exists
 	jarPath := filepath.Join(s.serverPath, s.jarName)
-	if _, err := os.Stat(jarPath); err != nil {
+	if !filesystem.FileExists(jarPath) {
 		return fmt.Errorf("server JAR not found: %s", jarPath)
 	}
 
 	// Check if server directory exists
-	if _, err := os.Stat(s.serverPath); err != nil {
+	if !filesystem.DirExists(s.serverPath) {
 		return fmt.Errorf("server directory not found: %s", s.serverPath)
 	}
 

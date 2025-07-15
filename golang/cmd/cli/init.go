@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/damianko135/curseforge-autoupdate/golang/helper/filesystem"
 	"github.com/spf13/cobra"
 )
 
@@ -20,7 +21,7 @@ func initCmd() *cobra.Command {
 			switch format {
 			case "toml", "yaml", "json", "yml":
 				filename := "config." + format
-				if _, err := os.Stat(filename); err == nil {
+				if filesystem.FileExists(filename) {
 					return fmt.Errorf("%s already exists", filename)
 				}
 				templateName := "template." + format
@@ -34,7 +35,7 @@ func initCmd() *cobra.Command {
 				fmt.Fprintf(cmd.OutOrStdout(), "✅ %s created.\n", filename)
 				return nil
 			case "":
-				return fmt.Errorf("no format specified, please use one of: toml, yaml, json, yml, dotenv")
+				return fmt.Errorf("no config format specified (got empty string), please use one of: toml, yaml, json, yml, dotenv")
 			default:
 				return fmt.Errorf("unsupported format: %s (supported: toml, yaml, yml, json)", format)
 			}

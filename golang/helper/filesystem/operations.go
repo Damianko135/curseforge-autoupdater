@@ -27,7 +27,7 @@ func CopyFile(src, dst string) error {
 
 	// Ensure destination directory exists
 	if err := EnsureDir(filepath.Dir(dst)); err != nil {
-		return err
+		return fmt.Errorf("failed to ensure destination directory for %s: %w", dst, err)
 	}
 
 	// #nosec G304 -- dst is validated by caller
@@ -48,7 +48,7 @@ func CopyFile(src, dst string) error {
 func MoveFile(src, dst string) error {
 	// Ensure destination directory exists
 	if err := EnsureDir(filepath.Dir(dst)); err != nil {
-		return err
+		return fmt.Errorf("failed to ensure destination directory for %s: %w", dst, err)
 	}
 
 	if err := os.Rename(src, dst); err != nil {
@@ -74,10 +74,13 @@ func RemoveDir(path string) error {
 	return nil
 }
 
-// FileExists checks if a file exists
+// FileExists checks if a file exists and is not a directory
 func FileExists(path string) bool {
-	_, err := os.Stat(path)
-	return err == nil
+	info, err := os.Stat(path)
+	if err != nil {
+		return false
+	}
+	return !info.IsDir()
 }
 
 // DirExists checks if a directory exists
@@ -89,11 +92,14 @@ func DirExists(path string) bool {
 	return info.IsDir()
 }
 
-// GetFileSize returns the size of a file in bytes
+// GetFileSize returns the size of a file in bytes, with improved error context
 func GetFileSize(path string) (int64, error) {
 	info, err := os.Stat(path)
 	if err != nil {
-		return 0, fmt.Errorf("failed to get file size for %s: %w", path, err)
+		return 0, fmt.Errorf("GetFileSize: failed to stat %q: %w", path, err)
+	}
+	if info.IsDir() {
+		return 0, fmt.Errorf("GetFileSize: %q is a directory, not a file", path)
 	}
 	return info.Size(), nil
 }

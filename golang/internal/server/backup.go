@@ -104,9 +104,9 @@ func (bm *BackupManager) createCompressedBackup(backupPath string) error {
 	defer zipWriter.Close()
 
 	// Walk through server directory and add files to zip
-	err = filepath.Walk(bm.serverPath, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
+	err = filepath.Walk(bm.serverPath, func(path string, info os.FileInfo, walkErr error) error {
+		if walkErr != nil {
+			return fmt.Errorf("walk error at %s: %w", path, walkErr)
 		}
 
 		// Skip certain files/directories
@@ -118,9 +118,9 @@ func (bm *BackupManager) createCompressedBackup(backupPath string) error {
 		}
 
 		// Get relative path
-		relPath, err := filepath.Rel(bm.serverPath, path)
-		if err != nil {
-			return err
+		relPath, relErr := filepath.Rel(bm.serverPath, path)
+		if relErr != nil {
+			return fmt.Errorf("failed to get relative path for %s: %w", path, relErr)
 		}
 
 		if info.IsDir() {
@@ -131,7 +131,10 @@ func (bm *BackupManager) createCompressedBackup(backupPath string) error {
 				Modified: info.ModTime(),
 			}
 			_, err := zipWriter.CreateHeader(header)
-			return err
+			if err != nil {
+				return fmt.Errorf("failed to create zip dir header for %s: %w", relPath, err)
+			}
+			return nil
 		}
 
 		// Create file entry
@@ -142,22 +145,27 @@ func (bm *BackupManager) createCompressedBackup(backupPath string) error {
 		}
 		writer, err := zipWriter.CreateHeader(header)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to create zip file header for %s: %w", relPath, err)
 		}
 
 		// Copy file content to zip
 		// #nosec G304 -- path is validated by Walk
-		file, err := os.Open(path)
-		if err != nil {
-			return err
+		file, openErr := os.Open(path)
+		if openErr != nil {
+			return fmt.Errorf("failed to open file %s: %w", path, openErr)
 		}
 		defer file.Close()
 
-		_, err = io.Copy(writer, file)
-		return err
+		if _, copyErr := io.Copy(writer, file); copyErr != nil {
+			return fmt.Errorf("failed to copy file %s to zip: %w", path, copyErr)
+		}
+		return nil
 	})
 
-	return err
+	if err != nil {
+		return fmt.Errorf("backup zip creation failed: %w", err)
+	}
+	return nil
 }
 
 // createUncompressedBackup creates an uncompressed backup
@@ -196,16 +204,17 @@ func (bm *BackupManager) shouldSkipFile(path string, info os.FileInfo) bool {
 
 // getBackupSize calculates the size of a backup
 func (bm *BackupManager) getBackupSize(backupPath string) (int64, error) {
-	info, err := os.Stat(backupPath)
-	if err != nil {
-		return 0, err
-	}
-
-	if info.IsDir() {
+	if filesystem.DirExists(backupPath) {
 		return filesystem.GetDirSize(backupPath)
 	}
-
-	return info.Size(), nil
+	if filesystem.FileExists(backupPath) {
+		size, err := filesystem.GetFileSize(backupPath)
+		if err != nil {
+			return 0, fmt.Errorf("getBackupSize: failed to get file size for %q: %w", backupPath, err)
+		}
+		return size, nil
+	}
+	return 0, fmt.Errorf("getBackupSize: path does not exist: %q", backupPath)
 }
 
 // ListBackups lists all available backups
@@ -223,21 +232,22 @@ func (bm *BackupManager) ListBackups() ([]BackupInfo, error) {
 	for _, entry := range entries {
 		if entry.IsDir() || strings.HasSuffix(entry.Name(), ".zip") {
 			backupPath := filepath.Join(bm.backupPath, entry.Name())
-			info, err := os.Stat(backupPath)
-			if err != nil {
-				continue
-			}
-
+			var createdTime time.Time
 			size, err := bm.getBackupSize(backupPath)
 			if err != nil {
 				size = 0
 			}
-
+			if filesystem.FileExists(backupPath) || filesystem.DirExists(backupPath) {
+				info, err := os.Stat(backupPath)
+				if err == nil {
+					createdTime = info.ModTime()
+				}
+			}
 			backupInfo := BackupInfo{
 				Name:         entry.Name(),
 				Path:         backupPath,
 				Size:         size,
-				Created:      info.ModTime(),
+				Created:      createdTime,
 				IsCompressed: strings.HasSuffix(entry.Name(), ".zip"),
 			}
 

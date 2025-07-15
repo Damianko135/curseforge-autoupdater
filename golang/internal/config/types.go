@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/damianko135/curseforge-autoupdate/golang/helper/filesystem"
 	"github.com/spf13/viper"
 )
 
@@ -215,7 +216,7 @@ func getDefaultConfigPath() string {
 	}
 
 	for _, file := range configFiles {
-		if _, err := os.Stat(file); err == nil {
+		if filesystem.FileExists(file) {
 			return file
 		}
 	}

@@ -100,7 +100,7 @@ func setupRootCommand(cfg *Config, configPath *string, initFormat *string) (*cob
 					fmt.Printf("Created %s. Please edit it and re-run.\n", *configPath)
 					return nil
 				} else {
-					return fmt.Errorf("config file required, exiting")
+					return fmt.Errorf("config file required: %s (user declined to create)", *configPath)
 				}
 			}
 			return fmt.Errorf("failed to load config: %w", err)
