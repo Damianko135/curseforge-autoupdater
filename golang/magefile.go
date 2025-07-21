@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/magefile/mage/mage"
 	"github.com/magefile/mage/mg"
 	"github.com/magefile/mage/sh"
 )
@@ -19,11 +20,15 @@ const (
 	cliBinaryName = "curseforge-autoupdate"
 	webBinaryName = "webserver"
 	distDir       = "dist"
-	templDir      = "./templates"
+	templDir      = "./views"
 	cliDir        = "./cmd/cli"
 	webDir        = "./cmd/web"
 	webTmpDir     = "./cmd/web/tmp"
 )
+
+func main() {
+	os.Exit(mage.Main())
+}
 
 // Platforms for Release builds
 var platforms = []struct {
