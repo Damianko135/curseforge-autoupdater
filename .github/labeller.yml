@@ -1,0 +1,4 @@
+# List of predefined rules for labelling prs and issues in the repository
+
+# This file is used by the GitHub Labeler Action to automatically apply labels based on the content of issues and pull requests.
+# For more information, see https://github.com/actions/labeler/blob/main/docs/predefined-labels.md

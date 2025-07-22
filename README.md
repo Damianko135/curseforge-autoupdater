@@ -1,11 +1,18 @@
 
 ---
-
 # CurseForge AutoUpdate
 
 An automated tool for checking, downloading, and managing updates for CurseForge mods or modpacks. Supports both a Python proof-of-concept and a modern Golang CLI for advanced server automation.
 
 ---
+
+# Why should you use this?
+- **Automated Updates:** No need to manually download and install mods.
+- **Efficient Storage:** Only stores necessary files, reducing storage needs.
+- **Easy Maintenance:** Simplified process for updating mods and modpacks.
+
+---
+
 
 ## Project Overview
 
@@ -31,7 +38,7 @@ Located in [`python/`](python/). See [`python/README.md`](python/README.md) for 
 cd python
 pip install -r requirements.txt
 cp .env.example .env  # or create .env manually
-python poc.py
+python3 poc.py
 ```
 
 See [`python/README.md`](python/README.md) for CLI usage, library usage, and config options.
@@ -41,6 +48,10 @@ See [`python/README.md`](python/README.md) for CLI usage, library usage, and con
 ## Golang CLI (In Development)
 
 Located in [`golang/`](golang/). See [`golang/PLAN.md`](golang/PLAN.md) for full roadmap.
+
+### NOTE:
+- This project is making usage of the [mage](https://magefile.org/) tooling.
+
 
 **Current Status:**
 - CLI skeleton with commands: `init`, `check`, `update`, `backup`, `restore`, `notify`, `list`, `version`
@@ -89,7 +100,7 @@ curseforge-autoupdate/
 
 ## Development Plan (Golang)
 
-See [`golang/DEVELOPMENT_PLAN.md`](golang/DEVELOPMENT_PLAN.md) for a detailed roadmap, including:
+See [`golang/PLAN.md`](golang/PLAN.md) for a detailed roadmap, including:
 - Enhanced config system (multi-format, templates)
 - Modular API client
 - Command structure: `init`, `check`, `update`, `backup`, `restore`, `notify`, `list`, `version`
@@ -106,11 +117,14 @@ MOD_ID=123456
 DOWNLOAD_PATH=./downloads
 ```
 
-**Golang (config.toml):**
+**Golang [config.toml](golang/templates/template.toml):**
+
+minimum:
 ```toml
+[curseforge]
 api_key = "your_api_key_here"
 mod_id = 123456
-# ...see templates for more fields
+download_path = "./downloads"
 ```
 
 ---
