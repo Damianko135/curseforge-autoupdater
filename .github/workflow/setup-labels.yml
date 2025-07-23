@@ -7,11 +7,11 @@ on:
       - 'main'
     paths:
       - '.github/labels.yml'
-      - '.github/workflows/labels.yml'
+      - '.github/workflow/setup-labels.yml'
   pull_request:
     paths:
       - '.github/labels.yml'
-      - '.github/workflows/labels.yml'
+      - '.github/workflow/setup-labels.yml'
 
 jobs:
   labeler:

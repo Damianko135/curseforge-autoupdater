@@ -1,0 +1,97 @@
+name: Go CI
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'golang/**'
+      - '.github/workflow/go-ci.yml'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'golang/**'
+      - '.github/workflow/go-ci.yml'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go-version: ['1.21', '1.22']
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: ${{ matrix.go-version }}
+
+    - name: Cache Go modules
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cache/go-build
+          ~/go/pkg/mod
+        key: ${{ runner.os }}-go-${{ matrix.go-version }}-${{ hashFiles('golang/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-${{ matrix.go-version }}-
+
+    - name: Download dependencies
+      working-directory: ./golang
+      run: go mod download
+
+    - name: Verify dependencies
+      working-directory: ./golang
+      run: go mod verify
+
+    - name: Run tests
+      working-directory: ./golang
+      run: go test -v -race -coverprofile=coverage.out ./...
+
+    - name: Run go vet
+      working-directory: ./golang
+      run: go vet ./...
+
+    - name: Run staticcheck
+      uses: dominikh/staticcheck-action@v1.3.0
+      with:
+        version: "2023.1.7"
+        install-go: false
+        working-directory: ./golang
+
+    - name: Upload coverage to Codecov
+      if: matrix.go-version == '1.22'
+      uses: codecov/codecov-action@v4
+      with:
+        file: ./golang/coverage.out
+        flags: golang
+        name: golang-coverage
+
+  build:
+    runs-on: ubuntu-latest
+    needs: test
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.22'
+
+    - name: Build CLI
+      working-directory: ./golang
+      run: go build -v ./cmd/cli
+
+    - name: Build Web
+      working-directory: ./golang
+      run: go build -v ./cmd/web
+
+    - name: Test build with race detector
+      working-directory: ./golang
+      run: |
+        go build -race ./cmd/cli
+        go build -race ./cmd/web

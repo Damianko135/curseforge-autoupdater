@@ -2,3 +2,35 @@
 
 # This file is used by the GitHub Labeler Action to automatically apply labels based on the content of issues and pull requests.
 # For more information, see https://github.com/actions/labeler/blob/main/docs/predefined-labels.md
+
+# Area-based labeling
+area:golang:
+  - changed-files:
+    - any-glob-to-any-file: 'golang/**/*'
+
+area:python:
+  - changed-files:
+    - any-glob-to-any-file: 'python/**/*'
+
+area:docs:
+  - changed-files:
+    - any-glob-to-any-file: ['*.md', 'docs/**/*', '**/*.md']
+
+# Type-based labeling
+type:ci:
+  - changed-files:
+    - any-glob-to-any-file: ['.github/**/*', '**/.github/**/*']
+
+type:test:
+  - changed-files:
+    - any-glob-to-any-file: ['**/test*', '**/*test*', '**/*_test.go', '**/test_*.py']
+
+# Configuration files
+type:config:
+  - changed-files:
+    - any-glob-to-any-file: ['**/*.toml', '**/*.yaml', '**/*.yml', '**/*.json', '**/*.env*', '**/go.mod', '**/go.sum', '**/requirements.txt', '**/setup.py']
+
+# Dependencies
+dependencies:
+  - changed-files:
+    - any-glob-to-any-file: ['**/go.mod', '**/go.sum', '**/requirements.txt', '**/setup.py', '**/package.json', '**/package-lock.json']

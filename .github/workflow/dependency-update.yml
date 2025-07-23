@@ -1,0 +1,136 @@
+name: Dependency Updates
+
+on:
+  schedule:
+    # Run weekly on Mondays at 9 AM UTC
+    - cron: '0 9 * * 1'
+  workflow_dispatch: # Allow manual triggering
+
+jobs:
+  update-go-dependencies:
+    name: Update Go Dependencies
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.22'
+
+    - name: Update Go dependencies
+      working-directory: ./golang
+      run: |
+        go get -u ./...
+        go mod tidy
+
+    - name: Check for changes
+      id: changes
+      run: |
+        if git diff --quiet golang/go.mod golang/go.sum; then
+          echo "changed=false" >> $GITHUB_OUTPUT
+        else
+          echo "changed=true" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Create Pull Request for Go dependencies
+      if: steps.changes.outputs.changed == 'true'
+      uses: peter-evans/create-pull-request@v6
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        commit-message: "chore(golang): update Go dependencies"
+        title: "chore(golang): update Go dependencies"
+        body: |
+          This PR updates Go dependencies to their latest versions.
+          
+          Changes:
+          - Updated all Go modules to latest compatible versions
+          - Ran `go mod tidy` to clean up dependencies
+          
+          Please review the changes and ensure all tests pass before merging.
+        branch: update-go-dependencies
+        delete-branch: true
+        labels: |
+          dependencies
+          area:golang
+          type:ci
+
+  update-python-dependencies:
+    name: Update Python Dependencies
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+    - name: Install pip-tools
+      run: pip install pip-tools
+
+    - name: Update Python dependencies
+      working-directory: ./python
+      run: |
+        # If you have a requirements.in file, use it to generate requirements.txt
+        if [ -f requirements.in ]; then
+          pip-compile --upgrade requirements.in
+        else
+          # Otherwise, try to upgrade existing requirements.txt
+          pip-compile --upgrade requirements.txt
+        fi
+
+    - name: Check for changes
+      id: changes
+      run: |
+        if git diff --quiet python/requirements.txt; then
+          echo "changed=false" >> $GITHUB_OUTPUT
+        else
+          echo "changed=true" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Create Pull Request for Python dependencies
+      if: steps.changes.outputs.changed == 'true'
+      uses: peter-evans/create-pull-request@v6
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        commit-message: "chore(python): update Python dependencies"
+        title: "chore(python): update Python dependencies"
+        body: |
+          This PR updates Python dependencies to their latest versions.
+          
+          Changes:
+          - Updated all Python packages to latest compatible versions
+          - Regenerated requirements.txt with updated versions
+          
+          Please review the changes and ensure all tests pass before merging.
+        branch: update-python-dependencies
+        delete-branch: true
+        labels: |
+          dependencies
+          area:python
+          type:ci
+
+  update-github-actions:
+    name: Update GitHub Actions
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Update GitHub Actions
+      uses: renovatebot/github-action@v40.1.11
+      with:
+        configurationFile: .github/renovate.json
+        token: ${{ secrets.GITHUB_TOKEN }}

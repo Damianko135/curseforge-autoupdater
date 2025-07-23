@@ -66,3 +66,37 @@
 - name: type:test
   color: "e4e669"
   description: Testing, test cases, or coverage
+
+- name: type:config
+  color: "f9d71c"
+  description: Configuration files or settings
+
+- name: dependencies
+  color: "0366d6"
+  description: Pull requests that update a dependency file
+
+# --- CurseForge Specific Labels ---
+- name: curseforge:api
+  color: "ff6600"
+  description: Related to CurseForge API integration
+
+- name: curseforge:download
+  color: "ff9900"
+  description: Related to mod downloading functionality
+
+- name: curseforge:update
+  color: "ffcc00"
+  description: Related to mod update checking
+
+# --- Component Labels ---
+- name: component:cli
+  color: "7057ff"
+  description: Command line interface related
+
+- name: component:web
+  color: "8b5cf6"
+  description: Web interface related
+
+- name: component:api
+  color: "06b6d4"
+  description: API layer related

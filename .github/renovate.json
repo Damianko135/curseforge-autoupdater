@@ -1,0 +1,41 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:base",
+    "schedule:weeklyNonOfficeHours"
+  ],
+  "labels": ["dependencies"],
+  "assignees": ["@me"],
+  "reviewers": ["@me"],
+  "packageRules": [
+    {
+      "matchManagers": ["gomod"],
+      "addLabels": ["area:golang"],
+      "groupName": "Go dependencies"
+    },
+    {
+      "matchManagers": ["pip_requirements"],
+      "addLabels": ["area:python"],
+      "groupName": "Python dependencies"
+    },
+    {
+      "matchManagers": ["github-actions"],
+      "addLabels": ["type:ci"],
+      "groupName": "GitHub Actions"
+    }
+  ],
+  "vulnerabilityAlerts": {
+    "enabled": true,
+    "labels": ["security", "priority:high"]
+  },
+  "lockFileMaintenance": {
+    "enabled": true,
+    "schedule": ["before 6am on monday"]
+  },
+  "golang": {
+    "enabled": true
+  },
+  "pip_requirements": {
+    "enabled": true
+  }
+}

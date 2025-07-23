@@ -1,0 +1,21 @@
+# Global owners - these users will be requested for review when someone opens a pull request
+* @Damianko135
+
+# Go code owners
+/golang/ @Damianko135
+
+# Python code owners  
+/python/ @Damianko135
+
+# Documentation owners
+*.md @Damianko135
+/docs/ @Damianko135
+
+# CI/CD owners
+/.github/ @Damianko135
+
+# Configuration files
+*.yml @Damianko135
+*.yaml @Damianko135
+*.toml @Damianko135
+*.json @Damianko135
