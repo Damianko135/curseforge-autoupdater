@@ -74,7 +74,7 @@ The Python implementation serves as a proof-of-concept for CurseForge API integr
 
 1. Create and activate a virtual environment (optional but recommended):
    ```bash
-   python -m venv venv
+   python3 -m venv venv
    source venv/bin/activate  # On Windows: venv\Scripts\activate
    ```
 2. Install dependencies:

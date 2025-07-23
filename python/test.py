@@ -117,7 +117,7 @@ def main():
         print("\n🎯 Next steps:")
         print("1. Copy .env.example to .env (if not done)")
         print("2. Add your CurseForge API key to .env")
-        print("3. Run: python -m updater.main")
+        print("3. Run: python3 -m updater.main")
         print("   Or: python cli.py")
         
         return 0
