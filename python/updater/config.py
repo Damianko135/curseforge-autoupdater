@@ -1,9 +1,9 @@
-
 import os
 import sys
 from pathlib import Path
+from typing import Any, Dict, Optional
+
 from dotenv import load_dotenv
-from typing import Dict, Any, Optional
 
 # Load environment variables
 load_dotenv()
@@ -64,7 +64,7 @@ def print_config(config: Dict[str, Any]) -> None:
     """
     Print the current configuration (with API key masked).
     """
-    print("\U0001F4CB Current Configuration:")
+    print("\U0001f4cb Current Configuration:")
 
     api_key = config["api_key"]
     if api_key:
@@ -92,15 +92,15 @@ def create_example_env() -> None:
     env_path = Path(".env")
 
     if not env_path.exists() and env_example_path.exists():
-        print("\U0001F4DD Creating .env file from .env.example...")
+        print("\U0001f4dd Creating .env file from .env.example...")
         try:
-            with open(env_example_path, 'r') as src, open(env_path, 'w') as dst:
+            with open(env_example_path, "r") as src, open(env_path, "w") as dst:
                 dst.write(src.read())
             print("\u2705 Created .env file. Please edit it with your API key.")
         except IOError as e:
             print(f"\u274c Could not create .env file: {e}")
     elif not env_example_path.exists():
-        print("\u26A0\uFE0F  No .env.example file found to copy from.")
+        print("\u26a0\ufe0f  No .env.example file found to copy from.")
 
 
 def require_env(var: str, example: Optional[str] = None) -> str:

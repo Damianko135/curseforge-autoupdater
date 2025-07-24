@@ -5,3 +5,12 @@ setuptools>=60.0.0
 
 # Optional: Type checking and development
 # typing-extensions>=4.0.0  # Uncomment for Python < 3.9
+
+# For linting and formatting
+flake8>=3.9.0
+black>=22.3.0
+mypy>=0.971
+isort>=5.10.1
+pylint>=2.15.6
+pytest>=7.0.0
+pytest-cov 

@@ -3,8 +3,9 @@
 Setup script for CurseForge Auto-Updater
 """
 
-from setuptools import setup, find_packages
 from pathlib import Path
+
+from setuptools import find_packages, setup
 
 # Read the README file
 this_directory = Path(__file__).parent

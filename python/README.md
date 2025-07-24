@@ -1,3 +1,4 @@
+
 ---
 # CurseForge Auto-Updater
 

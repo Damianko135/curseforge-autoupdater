@@ -1,12 +1,13 @@
-
 import sys
 import traceback
 from typing import Optional
-from .config import get_config
+
 from . import api, downloader, utils
+from .config import get_config
 
 try:
     import logging
+
     logger = logging.getLogger("updater")
     logging.basicConfig(level=logging.INFO)
 except ImportError:
@@ -55,9 +56,11 @@ def main() -> int:
         log("🔍 Fetching mod information...", "info")
         try:
             mod_info = api.get_mod_info(api_key, mod_id)
-            mod_name = mod_info.get('name', 'Unknown')
-            mod_authors = mod_info.get('authors', [])
-            author_name = mod_authors[0].get('name', 'Unknown') if mod_authors else 'Unknown'
+            mod_name = mod_info.get("name", "Unknown")
+            mod_authors = mod_info.get("authors", [])
+            author_name = (
+                mod_authors[0].get("name", "Unknown") if mod_authors else "Unknown"
+            )
 
             log(f"✅ Found mod: {mod_name}")
             log(f"   Author: {author_name}")
@@ -96,7 +99,9 @@ def main() -> int:
         # Check if download is needed
         log("🔄 Checking if update is needed...", "info")
         metadata = downloader.load_metadata(download_path)
-        needs_download, reason = utils.is_download_needed(latest_file, download_path, metadata)
+        needs_download, reason = utils.is_download_needed(
+            latest_file, download_path, metadata
+        )
 
         if needs_download:
             log(f"📥 Download needed: {reason}")

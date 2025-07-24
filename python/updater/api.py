@@ -1,7 +1,7 @@
+import json
+from typing import Any, Dict, List, Optional
 
 import requests
-import json
-from typing import Dict, List, Optional, Any
 
 USER_AGENT = "CurseForge Auto-Updater/1.0"
 BASE_URL = "https://api.curseforge.com/v1"
@@ -9,10 +9,13 @@ BASE_URL = "https://api.curseforge.com/v1"
 
 class CurseForgeAPIError(Exception):
     """Custom exception for CurseForge API errors."""
+
     pass
 
 
-def _make_request(url: str, api_key: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+def _make_request(
+    url: str, api_key: str, params: Optional[Dict[str, Any]] = None
+) -> Dict[str, Any]:
     """
     Make a request to the CurseForge API with error handling.
     Returns the parsed JSON response as a dictionary.
@@ -21,7 +24,7 @@ def _make_request(url: str, api_key: str, params: Optional[Dict[str, Any]] = Non
     headers = {
         "Accept": "application/json",
         "x-api-key": api_key,
-        "User-Agent": USER_AGENT
+        "User-Agent": USER_AGENT,
     }
     try:
         response = requests.get(url, headers=headers, params=params, timeout=30)
@@ -64,7 +67,7 @@ def get_mod_files(
     api_key: str,
     mod_id: str,
     game_version: Optional[str] = None,
-    mod_loader: Optional[str] = None
+    mod_loader: Optional[str] = None,
 ) -> List[Dict[str, Any]]:
     """Get files for a specific mod with optional filtering."""
     url = f"{BASE_URL}/mods/{mod_id}/files"
@@ -89,7 +92,7 @@ def search_mods(
     search_filter: str,
     game_id: int = 432,
     class_id: Optional[int] = None,
-    sort_field: int = 2
+    sort_field: int = 2,
 ) -> List[Dict[str, Any]]:
     """Search for mods on CurseForge."""
     url = f"{BASE_URL}/mods/search"
@@ -97,7 +100,7 @@ def search_mods(
         "gameId": game_id,
         "searchFilter": search_filter,
         "sortField": sort_field,  # 2 = Popularity
-        "sortOrder": "desc"
+        "sortOrder": "desc",
     }
     if class_id:
         params["classId"] = class_id

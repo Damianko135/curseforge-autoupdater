@@ -1,7 +1,6 @@
-from typing import Any, Dict, List, Optional, Tuple
-from pathlib import Path
 from datetime import datetime
-
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
 
 
 def get_latest_file(files: List[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
@@ -13,9 +12,7 @@ def get_latest_file(files: List[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
 
 
 def is_download_needed(
-    file_info: Dict[str, Any],
-    download_path: Any,
-    metadata: Dict[str, Any]
+    file_info: Dict[str, Any], download_path: Any, metadata: Dict[str, Any]
 ) -> Tuple[bool, str]:
     """
     Check if a file needs to be downloaded.
@@ -53,7 +50,10 @@ def is_download_needed(
     try:
         local_size = file_path.stat().st_size
         if local_size != file_length:
-            return True, f"File size mismatch (local: {local_size}, remote: {file_length})"
+            return (
+                True,
+                f"File size mismatch (local: {local_size}, remote: {file_length})",
+            )
     except OSError:
         return True, "Could not check local file size"
 
@@ -90,7 +90,7 @@ def format_file_size(size_bytes: int) -> str:
 def format_date(date_string: str) -> str:
     """Format ISO date string to human readable format."""
     try:
-        dt = datetime.fromisoformat(date_string.replace('Z', '+00:00'))
+        dt = datetime.fromisoformat(date_string.replace("Z", "+00:00"))
         return dt.strftime("%Y-%m-%d %H:%M:%S UTC")
     except (ValueError, AttributeError):
         return date_string
@@ -110,8 +110,8 @@ def get_file_extension_from_url(url: str) -> str:
         return ""
 
     # Remove query parameters and get the last part
-    path = url.split('?')[0]
-    parts = path.split('.')
+    path = url.split("?")[0]
+    parts = path.split(".")
 
     if len(parts) > 1:
         return f".{parts[-1]}"
