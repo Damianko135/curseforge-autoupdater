@@ -52,7 +52,9 @@ jobs:
 
       - name: Check code formatting with black
         working-directory: ./python
-        run: black --check .      - name: Check import sorting with isort
+        run: black --check .
+
+      - name: Check import sorting with isort
         working-directory: ./python
         run: isort --check-only .
 
