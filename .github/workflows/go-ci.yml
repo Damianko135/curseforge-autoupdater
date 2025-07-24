@@ -5,20 +5,19 @@ on:
     branches: [ main, develop ]
     paths:
       - 'golang/**'
-      - '.github/workflow/go-ci.yml'
+      - '.github/workflows/go-ci.yml'
   pull_request:
     branches: [ main, develop ]
     paths:
       - 'golang/**'
-      - '.github/workflow/go-ci.yml'
+      - '.github/workflows/go-ci.yml'
 
 jobs:
   test:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        go-version: ['1.21', '1.22']
-    
+        go-version: ['1.24', '1.23']
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -38,28 +37,24 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-go-${{ matrix.go-version }}-
 
-    - name: Download dependencies
-      working-directory: ./golang
-      run: go mod download
+    - name: Setting up mage
+      run: go install github.com/magefile/mage@latest
 
-    - name: Verify dependencies
+    - name: Run mage to install needed tools
       working-directory: ./golang
-      run: go mod verify
+      run: mage install
 
-    - name: Run tests
+    - name: Run mage to lint
       working-directory: ./golang
-      run: go test -v -race -coverprofile=coverage.out ./...
+      run: mage lint
 
-    - name: Run go vet
+    - name: Run mage to vet
       working-directory: ./golang
-      run: go vet ./...
+      run: mage vet
 
-    - name: Run staticcheck
-      uses: dominikh/staticcheck-action@v1.3.0
-      with:
-        version: "2023.1.7"
-        install-go: false
-        working-directory: ./golang
+    - name: Run mage to test
+      working-directory: ./golang
+      run: mage test
 
     - name: Upload coverage to Codecov
       if: matrix.go-version == '1.22'
@@ -72,7 +67,6 @@ jobs:
   build:
     runs-on: ubuntu-latest
     needs: test
-    
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -80,18 +74,11 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@v5
       with:
-        go-version: '1.24'
+        go-version: '1.21'
 
-    - name: Build CLI
-      working-directory: ./golang
-      run: go build -v ./cmd/cli
+    - name: Setting up mage
+      run: go install github.com/magefile/mage@latest
 
-    - name: Build Web
+    - name: Build CLI and Web
       working-directory: ./golang
-      run: go build -v ./cmd/web
-
-    - name: Test build with race detector
-      working-directory: ./golang
-      run: |
-        go build -race ./cmd/cli
-        go build -race ./cmd/web
+      run: mage build

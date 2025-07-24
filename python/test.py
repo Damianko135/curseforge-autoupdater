@@ -4,7 +4,6 @@ Test script for CurseForge Auto-Updater
 """
 
 import sys
-import os
 from pathlib import Path
 
 # Add the package to the path

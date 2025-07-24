@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/magefile/mage/mage"
+	// "github.com/magefile/mage/mage"
 	"github.com/magefile/mage/mg"
 	"github.com/magefile/mage/sh"
 )
@@ -26,9 +26,9 @@ const (
 	webTmpDir     = "./cmd/web/tmp"
 )
 
-func main() {
-	os.Exit(mage.Main())
-}
+// func main() {
+// 	os.Exit(mage.Main())
+// }
 
 // Platforms for Release builds
 var platforms = []struct {
@@ -142,7 +142,7 @@ func FormatImports() error {
 // Install sets up development tools such as templ, air, and linters.
 func Install() error {
 	tools := []string{
-		"github.com/cosmtrek/air@latest",
+		"github.com/air-verse/air@latest",
 		"github.com/incu6us/goimports-reviser/v2@latest",
 		"github.com/go-task/task/v3/cmd/task@latest",
 		"github.com/securego/gosec/v2/cmd/gosec@latest",

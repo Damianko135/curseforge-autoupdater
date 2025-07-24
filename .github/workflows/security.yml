@@ -37,13 +37,22 @@ jobs:
       uses: actions/setup-go@v5
       with:
         go-version: '1.24'
+      
+    - name: Setup mage (for Go)
+      if: matrix.language == 'go'
+      working-directory: ./golang
+      run: go install github.com/magefile/mage@latest
+
+    - name: Install dependencies (for Go)
+      if: matrix.language == 'go'
+      working-directory: ./golang
+      run: mage install
 
     - name: Build Go (for CodeQL)
       if: matrix.language == 'go'
       working-directory: ./golang
       run: |
-        go build ./cmd/cli
-        go build ./cmd/web
+        mage release
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3

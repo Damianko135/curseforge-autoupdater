@@ -1,18 +1,17 @@
 
----
 # CurseForge AutoUpdate
 
 An automated tool for checking, downloading, and managing updates for CurseForge mods or modpacks. Supports both a Python proof-of-concept and a modern Golang CLI for advanced server automation.
 
 ---
 
-# Why should you use this?
+## Why should you use this?
+
 - **Automated Updates:** No need to manually download and install mods.
 - **Efficient Storage:** Only stores necessary files, reducing storage needs.
 - **Easy Maintenance:** Simplified process for updating mods and modpacks.
 
 ---
-
 
 ## Project Overview
 
@@ -28,12 +27,14 @@ This repository contains:
 Located in [`python/`](python/). See [`python/README.md`](python/README.md) for full details.
 
 **Features:**
+
 - Connects to CurseForge Core API v1
 - Fetches mod info, lists files, downloads latest file
 - Uses `.env` for config (API key, mod ID, download path)
 - Handles errors and API fallbacks
 
 **Quickstart:**
+
 ```bash
 cd python
 pip install -r requirements.txt
@@ -49,17 +50,19 @@ See [`python/README.md`](python/README.md) for CLI usage, library usage, and con
 
 Located in [`golang/`](golang/). See [`golang/PLAN.md`](golang/PLAN.md) for full roadmap.
 
-### NOTE:
-- This project is making usage of the [mage](https://magefile.org/) tooling.
+### NOTE
 
+- This project uses the [mage](https://magefile.org/) tooling.
 
 **Current Status:**
+
 - CLI skeleton with commands: `init`, `check`, `update`, `backup`, `restore`, `notify`, `list`, `version`
 - Config management: supports TOML, YAML, JSON, and .env templates
 - Embedded config templates and interactive config creation
 - Modular API client for CurseForge (mod info, file listing, download, search)
 
 **Planned Features:**
+
 - Full modpack update automation (backup, update, restore)
 - Discord/webhook notifications
 - Minecraft server integration (start/stop, notify players)
@@ -67,6 +70,7 @@ Located in [`golang/`](golang/). See [`golang/PLAN.md`](golang/PLAN.md) for full
 - Scheduling, retention, rollback, and more
 
 **Example CLI Usage:**
+
 ```bash
 cd golang
 go run ./cmd/cli/main.go --init toml   # Scaffold config
@@ -78,7 +82,7 @@ go run ./cmd/cli/main.go update         # (Planned) Update modpack
 
 ## Directory Structure
 
-```
+```text
 curseforge-autoupdate/
 ├── golang/      # Golang CLI implementation
 │   ├── cmd/cli/         # CLI entry and commands

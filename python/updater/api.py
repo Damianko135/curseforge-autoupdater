@@ -1,3 +1,4 @@
+
 import requests
 import json
 from typing import Dict, List, Optional, Any
@@ -5,9 +6,11 @@ from typing import Dict, List, Optional, Any
 USER_AGENT = "CurseForge Auto-Updater/1.0"
 BASE_URL = "https://api.curseforge.com/v1"
 
+
 class CurseForgeAPIError(Exception):
     """Custom exception for CurseForge API errors."""
     pass
+
 
 def _make_request(url: str, api_key: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     """
@@ -49,11 +52,13 @@ def _make_request(url: str, api_key: str, params: Optional[Dict[str, Any]] = Non
         print(f"[API] Invalid JSON response from {url}")
         raise CurseForgeAPIError("Invalid JSON response")
 
+
 def get_mod_info(api_key: str, mod_id: str) -> Dict[str, Any]:
     """Get information about a specific mod."""
     url = f"{BASE_URL}/mods/{mod_id}"
     data = _make_request(url, api_key)
     return data.get("data", {})
+
 
 def get_mod_files(
     api_key: str,
@@ -71,11 +76,13 @@ def get_mod_files(
     data = _make_request(url, api_key, params)
     return data.get("data", [])
 
+
 def get_mod_file_info(api_key: str, mod_id: str, file_id: str) -> Dict[str, Any]:
     """Get information about a specific mod file."""
     url = f"{BASE_URL}/mods/{mod_id}/files/{file_id}"
     data = _make_request(url, api_key)
     return data.get("data", {})
+
 
 def search_mods(
     api_key: str,
@@ -97,11 +104,13 @@ def search_mods(
     data = _make_request(url, api_key, params)
     return data.get("data", [])
 
+
 def get_game_info(api_key: str, game_id: int = 432) -> Dict[str, Any]:
     """Get information about a game (default: Minecraft)."""
     url = f"{BASE_URL}/games/{game_id}"
     data = _make_request(url, api_key)
     return data.get("data", {})
+
 
 def get_mod_categories(api_key: str, game_id: int = 432) -> List[Dict[str, Any]]:
     """Get available mod categories for a game."""
@@ -109,6 +118,7 @@ def get_mod_categories(api_key: str, game_id: int = 432) -> List[Dict[str, Any]]
     params = {"gameId": game_id}
     data = _make_request(url, api_key, params)
     return data.get("data", [])
+
 
 def validate_api_key(api_key: str) -> bool:
     """Validate that the API key works by making a simple request."""

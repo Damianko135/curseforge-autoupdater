@@ -1,27 +1,34 @@
-## Potential Issues in the CurseForge Auto-Update Codebase (Golang)
+
+# Potential Issues in the CurseForge Auto-Update Codebase (Golang)
 
 ### 1. Error Handling
+
 - Some functions (especially in helpers and notification modules) return generic errors or simply return `false` on failure (e.g., `FileExists`, `DirExists`). This can make debugging difficult and may hide the root cause of issues.
 - Not all errors are wrapped with context, which can make tracing problems harder.
 
 ### 2. Configuration Validation
+
 - The config validation is present, but some fields (like notification URLs, backup paths) may not be validated for format or existence, only for non-emptiness.
 - No schema validation for TOML/YAML/JSON config files, so malformed configs may not be caught early.
 
 ### 3. Testing Coverage
+
 - There is only minimal unit testing (see `compare_test.go` for version comparison). Most business logic, API, and CLI commands lack tests.
 - No integration or end-to-end tests for update, backup, or notification flows.
 
 ### 4. Logging and Observability
+
 - Logging is not consistently used across all modules. Some helpers and internal logic do not log errors or important events.
 - No structured logging or log levels, which can make troubleshooting in production harder.
 
 ### 5. Security Practices
+
 - API keys and sensitive config are handled via config files, but there is no mention of secure storage or environment variable fallback.
 - No input sanitization for user-supplied paths or config values (potential path traversal or injection risk).
 - No explicit HTTPS enforcement for webhooks or API calls.
 
 ### 6. Code Quality and Maintainability
+
 - Some helpers (e.g., version parsing) use complex regex and manual parsing, which could be replaced with well-tested libraries.
 - Some functions return zero values on error (e.g., `GetMajorVersion` returns 0), which can mask bugs if not checked properly.
 - Some code is duplicated (e.g., similar validation logic for Discord and webhook notifications).

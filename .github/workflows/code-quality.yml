@@ -10,7 +10,6 @@ jobs:
   go-quality:
     name: Go Code Quality
     runs-on: ubuntu-latest
-    
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -20,15 +19,17 @@ jobs:
       with:
         go-version: '1.24'
 
-    - name: golangci-lint
-      uses: golangci/golangci-lint-action@v6
-      with:
-        version: latest
-        working-directory: golang
-        args: --timeout=5m
+    - name: install mage
+      working-directory: ./golang
+      run: go install github.com/magefile/mage@latest
 
-    - name: Go Report Card
-      uses: creekorful/goreportcard-action@v1.0
+    - name: install dependencies
+      working-directory: ./golang
+      run: mage install
+
+    - name: Run linter
+      working-directory: ./golang
+      run: mage lint
 
   python-quality:
     name: Python Code Quality

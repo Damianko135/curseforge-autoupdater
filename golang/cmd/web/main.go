@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/a-h/templ"
-	"github.com/damianko135/curseforge-autoupdate/golang/views"
+	"github.com/damianko135/curseforge-autoupdate/golang/views"  //nolint:all
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )

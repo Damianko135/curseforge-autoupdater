@@ -1,3 +1,4 @@
+
 import os
 import sys
 from pathlib import Path
@@ -6,6 +7,7 @@ from typing import Dict, Any, Optional
 
 # Load environment variables
 load_dotenv()
+
 
 def get_config() -> Dict[str, Any]:
     """
@@ -21,63 +23,66 @@ def get_config() -> Dict[str, Any]:
         "minecraft_version": os.getenv("MINECRAFT_VERSION"),
         "extract_path": Path(os.getenv("EXTRACT_PATH", "./extracted")),
     }
-    
+
     # Validate mod_id is numeric
     try:
         config["mod_id"] = str(int(config["mod_id"]))
     except ValueError:
-        print(f"❌ Invalid MOD_ID: {config['mod_id']}. Must be a number.")
+        print(f"\u274c Invalid MOD_ID: {config['mod_id']}. Must be a number.")
         sys.exit(1)
-    
+
     return config
+
 
 def validate_config(config: Dict[str, Any]) -> bool:
     """
     Validate the loaded configuration. Returns True if valid, False otherwise.
     """
     errors = []
-    
+
     if not config["api_key"]:
         errors.append("CURSEFORGE_API_KEY is required")
-    
+
     if not config["mod_id"]:
         errors.append("MOD_ID is required")
-    
+
     try:
         int(config["mod_id"])
     except ValueError:
         errors.append("MOD_ID must be a valid number")
-    
+
     if errors:
-        print("❌ Configuration errors:")
+        print("\u274c Configuration errors:")
         for error in errors:
             print(f"   - {error}")
         return False
-    
+
     return True
+
 
 def print_config(config: Dict[str, Any]) -> None:
     """
     Print the current configuration (with API key masked).
     """
-    print("📋 Current Configuration:")
-    
+    print("\U0001F4CB Current Configuration:")
+
     api_key = config["api_key"]
     if api_key:
         masked_key = f"{'*' * (len(api_key) - 4)}{api_key[-4:]}"
     else:
-        masked_key = "❌ Not set"
-    
+        masked_key = "\u274c Not set"
+
     print(f"   API Key: {masked_key}")
     print(f"   Mod ID: {config['mod_id']}")
     print(f"   Game ID: {config['game_id']}")
     print(f"   Download Path: {config['download_path']}")
     print(f"   Extract Path: {config['extract_path']}")
-    
+
     if config["mod_loader"]:
         print(f"   Mod Loader: {config['mod_loader']}")
     if config["minecraft_version"]:
         print(f"   Minecraft Version: {config['minecraft_version']}")
+
 
 def create_example_env() -> None:
     """
@@ -85,17 +90,18 @@ def create_example_env() -> None:
     """
     env_example_path = Path(".env.example")
     env_path = Path(".env")
-    
+
     if not env_path.exists() and env_example_path.exists():
-        print("📝 Creating .env file from .env.example...")
+        print("\U0001F4DD Creating .env file from .env.example...")
         try:
             with open(env_example_path, 'r') as src, open(env_path, 'w') as dst:
                 dst.write(src.read())
-            print("✅ Created .env file. Please edit it with your API key.")
+            print("\u2705 Created .env file. Please edit it with your API key.")
         except IOError as e:
-            print(f"❌ Could not create .env file: {e}")
+            print(f"\u274c Could not create .env file: {e}")
     elif not env_example_path.exists():
-        print("⚠️  No .env.example file found to copy from.")
+        print("\u26A0\uFE0F  No .env.example file found to copy from.")
+
 
 def require_env(var: str, example: Optional[str] = None) -> str:
     """
@@ -103,7 +109,7 @@ def require_env(var: str, example: Optional[str] = None) -> str:
     """
     value = os.getenv(var)
     if not value:
-        msg = f"❌ Required environment variable '{var}' is missing."
+        msg = f"\u274c Required environment variable '{var}' is missing."
         if example:
             msg += f" Example: {var}={example}"
         print(msg)

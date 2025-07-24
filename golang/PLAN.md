@@ -1,19 +1,23 @@
-# **CurseForge Auto-Update CLI Tool - Detailed Development Plan**
+# CurseForge Auto-Update CLI Tool - Detailed Development Plan
 
-## **Project Overview**
+## Project Overview
+
 A CLI tool to automatically manage Minecraft modpack updates on servers with full lifecycle management (backup, update, restore) and notification capabilities.
 
-## **Core Architecture**
+## Core Architecture
 
-### **Current State Analysis**
+### Current State Analysis
+
 ✅ **Existing Components:**
+
 - Basic CLI structure with Cobra
 - Config management (TOML, .env, YAML, JSON)
 - CurseForge API client with mod existence checking
 - Basic command structure
 
-### **Proposed Directory Structure**
-```
+### Proposed Directory Structure
+
+```text
 golang/
 ├── cmd/cli/main.go              # Main CLI entry point
 ├── internal/
@@ -39,10 +43,12 @@ golang/
     └── server.toml             # Server configuration template
 ```
 
-## **Phase 1: Core Infrastructure Enhancement**
+## Phase 1: Core Infrastructure Enhancement
 
-### **1.1 Enhanced Configuration System**
+### 1.1 Enhanced Configuration System
+
 **New Config Structure:**
+
 ```go
 type Config struct {
     // API Configuration
@@ -71,17 +77,20 @@ type NotificationConfig struct {
 }
 ```
 
-### **1.2 Enhanced API Client**
+### 1.2 Enhanced API Client
+
 **New Features:**
+
 - Modpack version checking
 - File download capabilities
 - Version comparison
 - Changelog retrieval
 
-## **Phase 2: Command Implementation**
+## Phase 2: Command Implementation
 
-### **2.1 Command Structure**
-```
+### 2.1 Command Structure
+
+```text
 curseforge-autoupdate
 ├── init           # Initialize new project
 ├── check          # Check for updates (enhanced)
@@ -94,9 +103,10 @@ curseforge-autoupdate
 └── version        # Show version info
 ```
 
-### **2.2 Command Details**
+### 2.2 Command Details
 
-#### **`init` Command**
+#### `init` Command
+
 - **Purpose**: Initialize a new project with configuration templates
 - **Features**:
   - Interactive setup wizard
@@ -105,7 +115,8 @@ curseforge-autoupdate
   - Test API connectivity
   - Create initial directory structure
 
-#### **`check` Command (Enhanced)**
+#### `check` Command (Enhanced)
+
 - **Purpose**: Check for modpack updates
 - **Features**:
   - Compare current vs latest version
@@ -113,7 +124,8 @@ curseforge-autoupdate
   - Validate compatibility
   - Dry-run mode
 
-#### **`update` Command**
+#### `update` Command
+
 - **Purpose**: Perform the full update process
 - **Features**:
   - Pre-update validation
@@ -123,7 +135,8 @@ curseforge-autoupdate
   - Rollback on failure
   - Post-update notifications
 
-#### **`backup` Command**
+#### `backup` Command
+
 - **Purpose**: Manual backup operations
 - **Features**:
   - Create named backups
@@ -131,70 +144,83 @@ curseforge-autoupdate
   - Compress/decompress
   - Cleanup old backups
 
-#### **`restore` Command**
+#### `restore` Command
+
 - **Purpose**: Restore from backup
 - **Features**:
   - List available backups
   - Selective restore
   - Validation before restore
 
-#### **`notify` Command**
+#### `notify` Command
+
 - **Purpose**: Send notifications manually
 - **Features**:
   - Test notification systems
   - Send custom messages
   - Verify webhook endpoints
 
-## **Phase 3: Server Management**
+## Phase 3: Server Management
 
-### **3.1 Minecraft Server Integration**
+### 3.1 Minecraft Server Integration
+
 **Features:**
+
 - Server process management (start/stop)
 - Player notification before shutdown
 - Server status monitoring
 - Configuration file management
 
-### **3.2 Backup System**
+### 3.2 Backup System
+
 **Features:**
+
 - Incremental backups
 - Compression support
 - Retention policies
 - Backup verification
 
-## **Phase 4: Notification System**
+## Phase 4: Notification System
 
-### **4.1 Discord Integration**
+### 4.1 Discord Integration
+
 **Features:**
+
 - Rich embed messages
 - Update notifications
 - Error alerts
 - Status updates
 
-### **4.2 Generic Webhook Support**
+### 4.2 Generic Webhook Support
+
 **Features:**
+
 - Configurable webhook endpoints
 - Custom message templates
 - Retry mechanisms
 - Error handling
 
-## **Phase 5: Advanced Features**
+## Phase 5: Advanced Features
 
-### **5.1 Scheduling & Automation**
+### 5.1 Scheduling & Automation
+
 **Features:**
+
 - Cron-like scheduling
 - Automatic update checks
 - Maintenance windows
 - Player activity monitoring
 
-### **5.2 Multi-Server Support**
+### 5.2 Multi-Server Support
+
 **Features:**
+
 - Multiple server configurations
 - Batch operations
 - Server groups
 - Centralized management
 
-
-## **Vision**
+## Vision
 
 The CurseForge Auto-Update CLI Tool aims to be the definitive solution for automated Minecraft modpack management on servers. The vision is to provide a robust, modular, and user-friendly tool that empowers server administrators to:
 
@@ -206,7 +232,8 @@ The CurseForge Auto-Update CLI Tool aims to be the definitive solution for autom
 
 Development will proceed iteratively, focusing on core stability, extensibility, and user experience, with ongoing improvements and community feedback guiding future enhancements. There are no fixed deadlines—quality, maintainability, and adaptability are the primary goals.
 
-## **Dependencies to Add**
+## Dependencies to Add
+
 ```go
 // Additional dependencies needed
 "github.com/robfig/cron/v3"           // Scheduling
@@ -215,44 +242,49 @@ Development will proceed iteratively, focusing on core stability, extensibility,
 "github.com/shirou/gopsutil/v3"      // System monitoring
 ```
 
-## **Key Design Decisions**
+## Key Design Decisions
 
-1. **Modular Architecture**: Each major feature in separate packages
-2. **Configuration-Driven**: All behavior configurable via TOML files
-3. **Fail-Safe Operations**: Always backup before making changes
-4. **Extensible Notifications**: Plugin-like notification system
-5. **Comprehensive Logging**: Detailed logging for troubleshooting
-6. **Rollback Capability**: Ability to undo changes if something goes wrong
+1. Modular Architecture: Each major feature in separate packages
+2. Configuration-Driven: All behavior configurable via TOML files
+3. Fail-Safe Operations: Always backup before making changes
+4. Extensible Notifications: Plugin-like notification system
+5. Comprehensive Logging: Detailed logging for troubleshooting
+6. Rollback Capability: Ability to undo changes if something goes wrong
 
-## **Technical Requirements**
+## Technical Requirements
 
-### **API Integration**
+### API Integration
+
 - CurseForge API v1 compatibility
 - Rate limiting and error handling
 - Modpack-specific endpoints focus
 - File download with progress tracking
 
-### **File System Operations**
+### File System Operations
+
 - Cross-platform file operations
 - Atomic file operations where possible
 - Permission handling
 - Disk space monitoring
 
-### **Process Management**
+### Process Management
+
 - Graceful server shutdown
 - Process monitoring and health checks
 - Signal handling
 - Timeout management
 
-### **Error Handling**
+### Error Handling
+
 - Comprehensive error types
 - Graceful degradation
 - Retry mechanisms
 - User-friendly error messages
 
-## **Configuration Templates**
+## Configuration Templates
 
-### **Main Config Template (init.toml)**
+### Main Config Template (init.toml)
+
 ```toml
 # CurseForge API Configuration
 api_key = "your-api-key-here"
@@ -281,7 +313,8 @@ enabled = false
 url = ""
 ```
 
-### **Server Config Template (server.toml)**
+### Server Config Template (server.toml)
+
 ```toml
 # Server-specific configuration
 [server]
@@ -301,54 +334,59 @@ window_end = "04:00"
 timezone = "UTC"
 ```
 
-## **Security Considerations**
+## Security Considerations
 
-1. **API Key Management**: Secure storage and handling of API keys
-2. **File System Security**: Proper permission checks and path validation
-3. **Process Security**: Safe process execution and signal handling
-4. **Network Security**: HTTPS enforcement and certificate validation
-5. **Input Validation**: Sanitization of all user inputs and configuration values
+1. API Key Management: Secure storage and handling of API keys
+2. File System Security: Proper permission checks and path validation
+3. Process Security: Safe process execution and signal handling
+4. Network Security: HTTPS enforcement and certificate validation
+5. Input Validation: Sanitization of all user inputs and configuration values
 
-## **Testing Strategy**
+## Testing Strategy
 
-### **Unit Tests**
+### Unit Tests
+
 - API client functionality
 - Configuration parsing
 - File system operations
 - Notification systems
 
-### **Integration Tests**
+### Integration Tests
+
 - End-to-end command execution
 - Server management workflows
 - Backup and restore processes
 - Notification delivery
 
-### **Manual Tests**
+### Manual Tests
+
 - Real server update scenarios
 - Error recovery testing
 - Performance under load
 - User experience validation
 
-## **Documentation Plan**
+## Documentation Plan
 
-1. **README.md**: Quick start guide and overview
-2. **INSTALLATION.md**: Installation instructions
-3. **CONFIGURATION.md**: Detailed configuration guide
-4. **COMMANDS.md**: Command reference
-5. **TROUBLESHOOTING.md**: Common issues and solutions
-6. **API.md**: API integration details
-7. **CONTRIBUTING.md**: Development guidelines
+1. README.md: Quick start guide and overview
+2. INSTALLATION.md: Installation instructions
+3. CONFIGURATION.md: Detailed configuration guide
+4. COMMANDS.md: Command reference
+5. TROUBLESHOOTING.md: Common issues and solutions
+6. API.md: API integration details
+7. CONTRIBUTING.md: Development guidelines
 
-## **Future Enhancements**
+## Future Enhancements
 
-### **Phase 6: Advanced Features**
+### Phase 6: Advanced Features
+
 - Web dashboard for monitoring
 - Multiple game support
 - Plugin/mod management
 - Performance metrics
 - Community features
 
-### **Phase 7: Enterprise Features**
+### Phase 7: Enterprise Features
+
 - Multi-server management
 - Role-based access control
 - Audit logging
