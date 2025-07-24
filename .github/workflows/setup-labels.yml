@@ -7,12 +7,11 @@ on:
       - 'main'
     paths:
       - '.github/labels.yml'
-      - '.github/workflow/setup-labels.yml'
+      - '.github/workflows/setup-labels.yml'
   pull_request:
     paths:
       - '.github/labels.yml'
-      - '.github/workflow/setup-labels.yml'
-
+      - '.github/workflows/setup-labels.yml'
 jobs:
   labeler:
     runs-on: ubuntu-latest
