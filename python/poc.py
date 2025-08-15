@@ -75,11 +75,75 @@ def get_mod_files(api_key, mod_id):
         return []
 
 
-def get_latest_file(files):
-    """Get the latest file from the list."""
+def is_server_file(file_info):
+    """Check if a file is a server file based on CurseForge API data."""
+    # Check if this file is explicitly marked as a server pack
+    return file_info.get("isServerPack", False)
+
+
+def get_server_pack_file(api_key, mod_id, server_pack_file_id):
+    """Get a specific server pack file by ID."""
+    url = f"https://api.curseforge.com/v1/mods/{mod_id}/files/{server_pack_file_id}"
+    headers = {
+        "Accept": "application/json",
+        "x-api-key": api_key,
+        "User-Agent": "CurseForge Auto-Updater PoC/1.0",
+    }
+    
+    try:
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()
+        data = response.json()
+        return data.get("data")
+    except requests.exceptions.RequestException as e:
+        print(f"Failed to get server pack file {server_pack_file_id}: {e}")
+        return None
+
+
+def filter_server_files(files):
+    """Filter files to only include server files."""
+    if not files:
+        return []
+    
+    server_files = [file for file in files if is_server_file(file)]
+    
+    if server_files:
+        print(f"Found {len(server_files)} server files out of {len(files)} total files")
+        return server_files
+    else:
+        print(f"No server files found among {len(files)} files")
+        return []
+
+
+def get_latest_file(files, api_key=None, mod_id=None):
+    """Get the latest file from the list, prioritizing server files."""
     if not files:
         return None
-    return max(files, key=lambda x: x.get("fileDate", ""))
+    
+    # First, try to find files that are already server packs
+    server_files = filter_server_files(files)
+    if server_files:
+        print("✓ Found server pack files, using latest server pack")
+        return max(server_files, key=lambda x: x.get("fileDate", ""))
+    
+    # If no direct server files, look for files that have a serverPackFileId
+    latest_regular_file = max(files, key=lambda x: x.get("fileDate", ""))
+    server_pack_file_id = latest_regular_file.get("serverPackFileId")
+    
+    if server_pack_file_id and api_key and mod_id:
+        print(f"✓ Latest file has server pack (ID: {server_pack_file_id}), fetching server pack")
+        server_pack_file = get_server_pack_file(api_key, mod_id, server_pack_file_id)
+        if server_pack_file:
+            print("✓ Successfully retrieved server pack file")
+            print(f"  Server pack file name: {server_pack_file.get('fileName')}")
+            print(f"  Server pack display name: {server_pack_file.get('displayName')}")
+            print(f"  Server pack is server pack: {server_pack_file.get('isServerPack')}")
+            return server_pack_file
+        else:
+            print("⚠️  Failed to retrieve server pack, falling back to regular file")
+    
+    print("⚠️  No server pack available, using latest regular file")
+    return latest_regular_file
 
 
 def download_file(file_info, api_key, download_path):
@@ -324,8 +388,8 @@ def main():
 
         print(f"✓ Found {len(files)} files")
 
-        # Get latest file
-        latest_file = get_latest_file(files)
+        # Get latest file (prioritizing server files)
+        latest_file = get_latest_file(files, api_key, mod_id)
         if not latest_file:
             print("❌ No latest file found")
             return
@@ -336,6 +400,8 @@ def main():
         print(f"  Display Name: {latest_file.get('displayName')}")
         print(f"  Date: {latest_file.get('fileDate')}")
         print(f"  Size: {latest_file.get('fileLength', 0)} bytes")
+        print(f"  Is Server Pack: {latest_file.get('isServerPack')}")
+        print(f"  Server Pack File ID: {latest_file.get('serverPackFileId')}")
         print(
             f"  Download URL: {'Available' if latest_file.get('downloadUrl') else 'Not available'}"
         )
